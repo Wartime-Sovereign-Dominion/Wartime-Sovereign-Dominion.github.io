@@ -1319,6 +1319,37 @@
             box-shadow: 0 0 20px rgba(245,158,11,0.4);
         }
 
+        /* ── RESEARCH SHOP ── */
+        #research-shop-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            z-index: 400; display: none; align-items: center; justify-content: center; padding: 12px;
+        }
+        #research-shop-modal.show { display: flex; }
+        .rshop-card {
+            background: linear-gradient(135deg, #0a0a18 0%, #12122a 100%);
+            border: 2px solid #1e1e4a; border-radius: 12px;
+            padding: 12px; margin-bottom: 8px; position: relative; overflow: hidden;
+            transition: all 0.2s;
+        }
+        .rshop-card:hover { border-color: #3b82f6; }
+        .rshop-card.equipped { border-color: #22c55e; background: linear-gradient(135deg,#052e16,#0a3d1e); }
+        .rshop-card.equipped:hover { border-color: #4ade80; }
+        .rshop-slot {
+            background: #0d0d18; border: 2px dashed #27272a; border-radius: 8px;
+            padding: 6px 10px; min-height: 32px; display: flex; align-items: center;
+            gap: 6px; margin-bottom: 4px; font-size: 9px; color: #52525b;
+        }
+        .rshop-slot.filled { border-color: #22c55e; background: #052e16; color: #4ade80; }
+        @keyframes grenadeArc {
+            0% { transform: translate(-50%,-50%) scale(0.8); opacity: 1; }
+            60% { transform: translate(-50%,-50%) scale(1.4); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(0.4); opacity: 0; }
+        }
+        .trench-obj {
+            position: absolute; z-index: 22; transform: translate(-50%,-50%);
+            font-size: 20px; cursor: pointer; filter: drop-shadow(0 2px 6px rgba(120,83,15,0.7));
+            animation: buildingSpawn 0.4s ease-out;
+        }
         /* ── FORMATION SHOP ── */
         .formation-shop-card {
             background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
@@ -2482,6 +2513,9 @@
                     <span style="position:absolute;top:-4px;right:-4px;background:#dc2626;color:white;font-size:6px;font-weight:900;padding:1px 3px;border-radius:3px;font-family:'Roboto',sans-serif;letter-spacing:0;">NEW</span>
                 </button>
                 <button onclick="showPanel('bldloadout-panel')" id="tab-bldloadout" class="tab-btn">🏗️ Buildings</button>
+                <button onclick="showPanel('resshop-panel')" id="tab-resshop" class="tab-btn" style="position:relative;">🔬 Research
+                    <span id="resshop-intel-tab-badge" style="position:absolute;top:-4px;right:-4px;background:#1e3a8a;border:1px solid #3b82f6;border-radius:8px;padding:0px 4px;font-size:7px;color:#93c5fd;display:none;"></span>
+                </button>
                 <button onclick="showPanel('achievements-panel')" id="tab-achievements" class="tab-btn">Achievements</button>
                 <button onclick="showPanel('crafting-panel')" id="tab-crafting" class="tab-btn">⚒️ Craft</button>
                 <button onclick="showPanel('unit-upg-panel')" id="tab-unit-upg" class="tab-btn">🔧 Unit Upgrades</button>
@@ -2501,9 +2535,11 @@
             <div class="flex flex-col items-start gap-0.5">
                 <button onclick="openLongMatch()" class="mt-1 bg-zinc-900 border border-red-800 text-red-400 army-font px-4 py-1.5 rounded-lg text-[11px] hover:bg-zinc-800 transition-colors" style="border-image:none;box-shadow:0 0 8px rgba(220,38,38,0.3)">🗺️ LONG MATCH</button>
                 <div class="text-[8px] text-zinc-500 leading-tight" style="max-width:130px">20-30 min · Grid conquest</div>
-                <!-- TODO: Re-add GAME MODES button once Trench Warfare is finished
-                <button onclick="openGameModes()" class="mt-1 bg-zinc-900 border border-purple-700 text-purple-400 army-font px-4 py-1.5 rounded-lg text-[11px] hover:bg-zinc-800 transition-colors">⚡ GAME MODES</button>
-                -->
+            </div>
+            <!-- 2 PLAYER BUTTON -->
+            <div class="flex flex-col items-center gap-0.5">
+                <button onclick="openMPSelect()" style="background:linear-gradient(135deg,#052e16,#14532d);border:2px solid #16a34a;color:#4ade80;border-radius:10px;padding:8px 16px;font-family:'Black Ops One',cursive;font-size:12px;cursor:pointer;box-shadow:0 0 12px rgba(22,163,74,0.4);letter-spacing:1px;transition:all 0.2s;" onmouseover="this.style.boxShadow='0 0 20px rgba(22,163,74,0.7)'" onmouseout="this.style.boxShadow='0 0 12px rgba(22,163,74,0.4)'">⚔️ 2 PLAYER</button>
+                <div class="text-[8px] text-zinc-500 leading-tight text-center">Local split-screen</div>
             </div>
             <button id="tutorial-menu-btn" onclick="startTutorial()" class="hidden bg-zinc-900 border border-blue-600 text-blue-400 army-font px-3 py-1.5 rounded-lg text-[10px] hover:bg-zinc-800 transition-colors animate-pulse">📖 TUTORIAL</button>
                 <button onclick="if(confirm('Reset all progress?')) { localStorage.clear(); location.reload(); }" class="text-[8px] text-zinc-600 uppercase hover:text-zinc-400">Reset Game</button>
@@ -2718,6 +2754,67 @@
                     Equipped: <span id="bldloadout-count">0</span>/4 — <span id="bldloadout-names" style="color:#71717a">None</span>
                 </div>
                 <div id="bldloadout-list"></div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             RESEARCH SHOP PANEL
+             ══════════════════════════════════════════════ -->
+        <div id="resshop-panel" class="hidden w-full max-w-md overflow-y-auto max-h-[50vh] p-2">
+            <!-- Intel points header -->
+            <div style="background:linear-gradient(135deg,#080818,#0f0f28);border:1px solid #1e3a8a;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:22px;">🔭</span>
+                    <div>
+                        <div style="font-family:'Black Ops One',cursive;font-size:12px;color:#60a5fa;">Intel Points</div>
+                        <div style="font-size:8px;color:#475569;margin-top:1px;">Complete Intel research · Run spy ops · Win battles</div>
+                    </div>
+                </div>
+                <div style="font-family:'Black Ops One',cursive;font-size:22px;color:#93c5fd;" id="rsp-intel-count">0</div>
+            </div>
+            <!-- Intel earning methods -->
+            <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
+                <button onclick="openSpyMinigame()" style="flex:1;min-width:120px;background:linear-gradient(135deg,#0a1a0a,#102010);border:2px solid #16a34a;border-radius:8px;padding:8px 6px;font-family:'Black Ops One',cursive;font-size:9px;color:#4ade80;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(34,197,94,0.4)'" onmouseout="this.style.boxShadow=''">
+                    🕵️ SPY OPERATION<br><span style="color:#166534;font-size:7px;font-family:'Roboto',sans-serif;font-weight:normal;">1-3 Intel · mini-game</span>
+                </button>
+                <button onclick="openIntelDailyOp()" style="flex:1;min-width:120px;background:linear-gradient(135deg,#14080a,#200a12);border:2px solid #dc2626;border-radius:8px;padding:8px 6px;font-family:'Black Ops One',cursive;font-size:9px;color:#f87171;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;" onmouseover="this.style.boxShadow='0 0 12px rgba(220,38,38,0.4)'" onmouseout="this.style.boxShadow=''">
+                    🎯 FIELD MISSION<br><span style="color:#7f1d1d;font-size:7px;font-family:'Roboto',sans-serif;font-weight:normal;"><span id="intel-daily-status">+2 Intel · 1× per day</span></span>
+                </button>
+            </div>
+            <!-- Equipped loadout row -->
+            <div style="font-size:8px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">⚙️ Equipped — <span id="rsp-equip-count">0</span>/3 max</div>
+            <div id="rsp-loadout" style="display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;"></div>
+            <!-- Shop/Owned tabs -->
+            <div style="display:flex;gap:5px;margin-bottom:8px;">
+                <button onclick="showRSTab('shop')" id="rst-shop" style="flex:1;background:linear-gradient(135deg,#0a0a18,#12122a);border:2px solid #3b82f6;color:#60a5fa;border-radius:7px;padding:6px;font-family:'Black Ops One',cursive;font-size:9px;cursor:pointer;">🛒 Buy Research</button>
+                <button onclick="showRSTab('owned')" id="rst-owned" style="flex:1;background:#18181b;border:2px solid #3f3f46;color:#71717a;border-radius:7px;padding:6px;font-family:'Black Ops One',cursive;font-size:9px;cursor:pointer;">📋 Owned</button>
+            </div>
+            <div id="rsp-shop-panel">
+                <div style="font-size:8px;color:#52525b;margin-bottom:6px;">Buy research permanently. Equip up to 3 to use in battle. Upgrades improve their power.</div>
+                <div id="rsp-shop-list"></div>
+            </div>
+            <div id="rsp-owned-panel" style="display:none;">
+                <div style="font-size:8px;color:#52525b;margin-bottom:6px;">Manage your owned research — equip, unequip, and upgrade.</div>
+                <div id="rsp-owned-list"></div>
+            </div>
+        </div>
+
+        <!-- ── SPY MINIGAME MODAL ── -->
+        <div id="spy-minigame-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;padding:16px;">
+            <div style="background:linear-gradient(135deg,#060c06,#0d180d);border:2px solid #16a34a;border-radius:16px;padding:20px;max-width:360px;width:100%;box-shadow:0 0 60px rgba(22,163,74,0.3);position:relative;">
+                <button onclick="closeSpyMinigame()" style="position:absolute;top:10px;right:12px;background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:'Black Ops One',cursive;">✕</button>
+                <div style="font-family:'Black Ops One',cursive;font-size:16px;color:#4ade80;margin-bottom:4px;letter-spacing:1px;">🕵️ SPY OPERATION</div>
+                <div style="font-size:9px;color:#4ade80;opacity:0.6;margin-bottom:14px;letter-spacing:2px;text-transform:uppercase;" id="spy-mg-subtitle">Choose your mission type</div>
+                <div id="spy-mg-content"></div>
+            </div>
+        </div>
+
+        <!-- ── INTEL DAILY OP MODAL ── -->
+        <div id="intel-daily-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;padding:16px;">
+            <div style="background:linear-gradient(135deg,#14080a,#200a12);border:2px solid #dc2626;border-radius:16px;padding:20px;max-width:360px;width:100%;box-shadow:0 0 60px rgba(220,38,38,0.3);position:relative;">
+                <button onclick="document.getElementById('intel-daily-modal').style.display='none'" style="position:absolute;top:10px;right:12px;background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:'Black Ops One',cursive;">✕</button>
+                <div style="font-family:'Black Ops One',cursive;font-size:16px;color:#f87171;margin-bottom:4px;letter-spacing:1px;">🎯 FIELD MISSION</div>
+                <div id="intel-daily-content"></div>
             </div>
         </div>
 
@@ -3152,6 +3249,10 @@
             <button class="econ-btn" id="econ-btn-comm_tower"   onclick="selectBuilding('comm_tower')"   style="display:none">📻 CmdTwr <span class="text-zinc-500">70g</span></button>
             <button class="econ-btn" id="econ-btn-gold_mine"    onclick="selectBuilding('gold_mine')"    style="display:none">⛏️ Mine <span class="text-zinc-500">80g</span></button>
         </div>
+        <!-- Trench button — standalone, visible whenever Trench Warfare is equipped -->
+        <button id="trench-place-btn" onclick="placeTrench()" style="display:none;width:100%;background:linear-gradient(135deg,#1c1a14,#2a2518);border:2px solid #78716c;border-radius:8px;padding:6px 10px;font-family:'Black Ops One',cursive;font-size:11px;color:#a8a29e;cursor:pointer;margin-bottom:4px;letter-spacing:0.5px;text-align:left;">
+            🪖 DIG TRENCH <span style="color:#57534e;font-size:9px;margin-left:4px;">30g or 1 manpower</span>
+        </button>
         <!-- Command Points bar -->
         <!-- Formation bar -->
         <div id="formation-bar" class="w-full px-0">
@@ -3206,22 +3307,22 @@
         </div>
         <div class="grid grid-cols-3 gap-2">
             <button onclick="startResearch(0)" id="res-0" class="res-btn">
-                <span class="res-icon">⚡</span>
-                <span class="res-label">MP Boost</span>
+                <span class="res-icon" id="res-icon-0">⚡</span>
+                <span class="res-label" id="res-label-0">MP Boost</span>
                 <div class="res-progress" id="resp-0"></div>
             </button>
             <button onclick="startResearch(1)" id="res-1" class="res-btn">
-                <span class="res-icon">🛡️</span>
-                <span class="res-label">Armor</span>
+                <span class="res-icon" id="res-icon-1">🛡️</span>
+                <span class="res-label" id="res-label-1">Armor</span>
                 <div class="res-progress" id="resp-1"></div>
             </button>
             <button onclick="startResearch(2)" id="res-2" class="res-btn">
-                <span class="res-icon">🔭</span>
-                <span class="res-label">Intel</span>
-                <span class="res-label" style="font-size:7px;color:#52525b">Jam+Spy</span>
+                <span class="res-icon" id="res-icon-2">🔭</span>
+                <span class="res-label" id="res-label-2">Intel</span>
                 <div class="res-progress" id="resp-2"></div>
             </button>
         </div>
+        <!-- Research Shop button removed — use the 🔬 Research tab in the main menu -->
     </div>
 
     <div id="deck" class="w-full max-w-md mt-2 grid grid-cols-4 gap-2 px-2"></div>
@@ -3935,11 +4036,11 @@ const FLAG_DATA = {            sau: null,
                 id: 'combat_engineers',
                 name: 'Combat Engineers',
                 icon: '🪖',
-                desc: 'A squad of engineers that rushes toward your HQ — on arrival they repair it for 8% max HP. Slow-moving but tanky. One use per match.',
+                desc: 'A squad of engineers that stations at your HQ. They repair it for 5% max HP every 15 seconds and will shoot enemies that come close. Costs 7 MP.',
                 rarity: 'epic',
                 recipe: { tungsten: 2, copper_ore: 2, tech_chip: 1, kiwi_steel: 2 },
                 natAffinity: ['usa', 'uk', 'ger', 'rus', 'nz'],
-                card: { n:'Combat Engineers', c:0, i:'🪖', hp:600, d:15, r:12, s:0.28, role:'tank', combatEngineers: true, atkCooldown: 2000 }
+                card: { n:'Combat Engineers', c:7, i:'🪖', hp:600, d:30, r:15, s:0.15, role:'tank', combatEngineers: true, atkCooldown: 2000 }
             },
             {
                 id: 'apache_gunship',
@@ -4548,6 +4649,8 @@ const FLAG_DATA = {            sau: null,
             unlockedSamurai: localStorage.getItem('wt_osa') === 'true',
             unlockedHashBrownCat: localStorage.getItem('wt_hbc') === 'true',
             catSkinEnabled: localStorage.getItem('wt_hbc_on') !== 'false',
+            intelPoints: parseInt(localStorage.getItem('wt_intel') || '0'),
+            resShopEquipped: JSON.parse(localStorage.getItem('wt_rshop') || '[]'),
             // Cosmetics
             ownedCosmetics: JSON.parse(localStorage.getItem('wt_cosmetics') || '[]'),
             equippedCosmetics: JSON.parse(localStorage.getItem('wt_equip_cosm') || '{}'),
@@ -4586,7 +4689,10 @@ const FLAG_DATA = {            sau: null,
             entities: [], 
             researching: null, 
             resProgress: [0,0,0], 
-            resCompleted: [false,false,false], 
+            resCompleted: [false,false,false],
+            resShopEquipped: [], // array of equipped shop research ids (max 3)
+            _grenadeTimers: {}, // per-unit grenade cooldown tracker
+            _trenchList: [],    // placed trench objects 
             bossPhase: 0, 
             bossTimer: 0,
             listenersAdded: false,
@@ -6300,6 +6406,8 @@ const FLAG_DATA = {            sau: null,
             localStorage.setItem('wt_craft', JSON.stringify(meta.craftedCards));
             localStorage.setItem('wt_craftupg', JSON.stringify(meta.craftUpg));
             localStorage.setItem('wt_stats', JSON.stringify(meta.stats));
+            // Update research shop HUD button
+            if(typeof updateResShopHUDBtn === 'function') updateResShopHUDBtn();
         }
 
         function renderUnlocks() {
@@ -6526,7 +6634,7 @@ const FLAG_DATA = {            sau: null,
 
         function showPanel(id) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            ['nation-panel', 'upgrade-panel', 'nat-upg-panel', 'unlocks-panel', 'achievements-panel', 'crafting-panel', 'unit-upg-panel', 'stats-panel', 'profile-panel', 'daily-panel', 'imperial-panel', 'formations-panel', 'cosmetics-panel', 'generals-panel', 'lim-generals-panel', 'bldloadout-panel', 'fundshop-panel'].forEach(p => 
+            ['nation-panel', 'upgrade-panel', 'nat-upg-panel', 'unlocks-panel', 'achievements-panel', 'crafting-panel', 'unit-upg-panel', 'stats-panel', 'profile-panel', 'daily-panel', 'imperial-panel', 'formations-panel', 'cosmetics-panel', 'generals-panel', 'lim-generals-panel', 'bldloadout-panel', 'fundshop-panel', 'resshop-panel'].forEach(p => 
                 document.getElementById(p)?.classList.add('hidden')
             );
             
@@ -6549,6 +6657,7 @@ const FLAG_DATA = {            sau: null,
             if(id === 'lim-generals-panel') { document.getElementById('tab-lim-generals').classList.add('active'); renderLimitedGenerals(); }
             if(id === 'bldloadout-panel') { document.getElementById('tab-bldloadout').classList.add('active'); renderBuildingLoadout(); }
             if(id === 'fundshop-panel') { document.getElementById('tab-fundshop').classList.add('active'); renderFundShop(); }
+            if(id === 'resshop-panel') { document.getElementById('tab-resshop').classList.add('active'); renderResearchShopPanel(); }
         }
 
         // ── DECK BUILDER STATE ──
@@ -6946,6 +7055,18 @@ const FLAG_DATA = {            sau: null,
             state._pendingFormation = null;
             state.intelActive = false;
             state.intelTimer = 0;
+            state._grenadeTimers = {};
+            state._trenchList = [];
+            // Sync shop equipped from meta (use new resShop structure if available)
+            state.resShopEquipped = [...(meta.resShop?.equipped || meta.resShopEquipped || [])];
+            // Remove any existing trench elements
+            document.querySelectorAll('.trench-obj').forEach(t => t.remove());
+            // Update HUD shop button
+            updateResShopHUDBtn();
+            // Show/hide trench button based on equipped
+            updateTrenchButton();
+            // Sync in-battle research button labels to equipped loadout
+            setTimeout(syncResearchButtons, 50);
             state.peaceTreatyOffered = false;
             state.peaceTreatyUsed = false;
             state._peaceDraw = false;
@@ -7073,7 +7194,12 @@ const FLAG_DATA = {            sau: null,
                     if(state.morale === 20) showNotification('💀 MORALE CRITICAL! Troops exhausted — manpower severely reduced!');
                 }
                 // Apply morale to manpower regen below (replace raw 0.5/0.8 with morale-scaled)
-                const baseRegen = (state.resCompleted[0] ? 0.8 : 0.5) * moraleMult;
+                const mpTier = (typeof getResearchTier === 'function') ? getResearchTier('mp_boost') : 0;
+                const mpBoostRates = [0.5, 0.8, 1.0, 1.3];
+                // MP boost active if mp_boost is equipped AND its research bar is completed
+                const mpSlot = (state.resShopEquipped || []).indexOf('mp_boost');
+                const mpActive = mpSlot >= 0 && state.resCompleted[mpSlot];
+                const baseRegen = (mpActive ? mpBoostRates[Math.min(3, mpTier+1)] : 0.5) * moraleMult;
                 state.pMan = Math.min(10, state.pMan + baseRegen * dt);
             }
 
@@ -7513,17 +7639,99 @@ const FLAG_DATA = {            sau: null,
                 document.getElementById(`resp-${state.researching}`).style.width = Math.min(100, (state.resProgress[state.researching]/1.5)) + "%";
                 
                 if(state.resProgress[state.researching] >= 150) { 
-                    const completedId = state.researching;
-                    state.resCompleted[completedId] = true; 
+                    const completedSlot = state.researching;
+                    const completedResId = (state.resShopEquipped || [])[completedSlot];
+                    state.resCompleted[completedSlot] = true; 
                     state.researching = null;
-                    showNotification(getResearchName(completedId) + ' COMPLETE!');
-                    // Intel research effect: reveal enemy deck + slow their manpower
-                    if(completedId === 2) {
+                    const def = completedResId ? ALL_RESEARCH_DEFS.find(r => r.id === completedResId) : null;
+                    showNotification((def ? def.icon + ' ' + def.name : getResearchName(completedSlot)) + ' COMPLETE!');
+                    syncResearchButtons();
+
+                    // Fire effect based on which research ID completed
+                    if(completedResId === 'intel_res') {
                         triggerIntelEffect();
+                        const intelGain = 1 + getResearchTier('intel_res');
+                        meta.intelPoints = (meta.intelPoints || 0) + intelGain;
+                        localStorage.setItem('wt_intel', meta.intelPoints);
+                        if(typeof updateResShopTabBadge === 'function') updateResShopTabBadge();
+                        showNotification('🔭 +' + intelGain + ' Intel Point(s) earned!');
                     }
+                    if(completedResId === 'armor') {
+                        const aTier = getResearchTier('armor');
+                        const reductions = [20, 30, 40];
+                        showNotification('🛡️ ARMOR COMPLETE! Units take ' + (reductions[aTier]||20) + '% less damage!');
+                    }
+                    if(completedResId === 'mp_boost') {
+                        showNotification('⚡ MP BOOST COMPLETE! Manpower fills faster!');
+                    }
+                    if(completedResId === 'grenades') {
+                        showNotification('💣 GRENADE TRAINING COMPLETE! Units now throw grenades!');
+                    }
+                    if(completedResId === 'trenches') {
+                        showNotification('🪖 TRENCH WARFARE COMPLETE! Use the 🪖 button to dig trenches!');
+                        updateTrenchButton();
+                    }
+                    if (state.resCompleted[0] && state.resCompleted[1] && state.resCompleted[2]) unlockAchievement('all_research');
                 }
             }
             
+            // ── GRENADE RESEARCH: equipped units throw grenades every 15s ──
+            if(state.resShopEquipped && state.resShopEquipped.includes('grenades')) {
+                const gTier = getResearchTier('grenades');
+                const gData = RESEARCH_DEFS.find(r=>r.id==='grenades').tiers[Math.max(0,gTier)];
+                const grenadeDmg = gData.grenadeDmg || 60;
+                const grenadeCooldown = gData.cooldown || 15;
+                const allRoles = gData.allRoles || false;
+                state.entities.forEach(ent => {
+                    if(ent.team !== 'p' || ent.type !== 'unit') return;
+                    if(!allRoles && ent.role !== 'balanced' && ent.role !== 'rusher' && ent.role !== 'tank') return;
+                    if(!state._grenadeTimers[ent.id]) state._grenadeTimers[ent.id] = grenadeCooldown;
+                    state._grenadeTimers[ent.id] -= dt;
+                    if(state._grenadeTimers[ent.id] <= 0) {
+                        state._grenadeTimers[ent.id] = grenadeCooldown;
+                        // Throw grenade 15% of field ahead
+                        const targetY = Math.max(5, ent.y - 15);
+                        const targetX = ent.x + (Math.random()-0.5)*20;
+                        const board = document.getElementById('game-board');
+                        if(board) {
+                            const g = document.createElement('div');
+                            g.style.cssText = `position:absolute;left:${ent.x}%;top:${ent.y}%;transform:translate(-50%,-50%);font-size:16px;z-index:200;pointer-events:none;animation:grenadeArc 0.5s ease-out forwards;`;
+                            g.textContent = '💣';
+                            board.appendChild(g);
+                            setTimeout(() => {
+                                g.remove();
+                                const boom = document.createElement('div');
+                                boom.style.cssText = `position:absolute;left:${targetX}%;top:${targetY}%;transform:translate(-50%,-50%);font-size:22px;z-index:200;pointer-events:none;animation:icbmBlast 0.5s ease-out forwards;`;
+                                boom.textContent = '💥'; board.appendChild(boom);
+                                setTimeout(()=>boom.remove(), 600);
+                                state.entities.forEach(enemy => {
+                                    if(enemy.team !== 'e') return;
+                                    const blastRadius = gData.allRoles ? 18 : 14;
+                                    const dist = Math.hypot(enemy.x - targetX, enemy.y - targetY);
+                                    if(dist < blastRadius) {
+                                        const dmg = Math.round(grenadeDmg * (1 - dist/blastRadius * 0.5));
+                                        enemy.hp -= dmg;
+                                        showFloatingDamage(enemy, dmg);
+                                        flashEntity(enemy);
+                                    }
+                                });
+                            }, 500);
+                        }
+                    }
+                });
+            }
+
+            // ── TRENCH RESEARCH: units near trenches gain _inTrench flag ──
+            if(state.resShopEquipped && state.resShopEquipped.includes('trenches') && state._trenchList) {
+                const tTier = getResearchTier('trenches');
+                const tData = RESEARCH_DEFS.find(r=>r.id==='trenches')?.tiers[Math.max(0,tTier)];
+                const trenchRadius = tData?.widerZone ? 22 : 15;
+                state.entities.forEach(ent => {
+                    if(ent.team !== 'p' || ent.type !== 'unit') return;
+                    ent._inTrench = state._trenchList.some(t => Math.hypot(ent.x - t.x, ent.y - t.y) < trenchRadius);
+                });
+            }
+
             // Combo decay
             if(time - state.lastKillTime > 3000 && state.combo > 0) {
                 state.combo = 0;
@@ -7846,6 +8054,21 @@ const FLAG_DATA = {            sau: null,
                             if(target.formation === 'testudo' && target.type === 'unit') finalDamage *= 0.5;
                             // Bunker shield: -25% damage for nearby player units
                             if(target.team === 'p' && target._bunkerShield) finalDamage *= 0.60;
+                            // Armor research: active only if equipped AND research bar completed
+                            if(target.team === 'p' && target.type === 'unit') {
+                                const armorSlot = (state.resShopEquipped || []).indexOf('armor');
+                                if(armorSlot >= 0 && state.resCompleted[armorSlot]) {
+                                    const aTier = getResearchTier('armor');
+                                    const reductions = [0.20, 0.30, 0.40];
+                                    finalDamage *= (1 - (reductions[Math.max(0,aTier)] || 0.20));
+                                }
+                            }
+                            // Trench defense: player units in a trench take less damage based on tier
+                            if(target.team === 'p' && target._inTrench) {
+                                const tTier = getResearchTier('trenches');
+                                const tData = RESEARCH_DEFS.find(r=>r.id==='trenches')?.tiers[Math.max(0,tTier)];
+                                finalDamage *= (1 - (tData?.dmgReduct || 0.35));
+                            }
                             // Weather damage multiplier
                             finalDamage *= getWeatherDamageMult();
 
@@ -7963,25 +8186,61 @@ const FLAG_DATA = {            sau: null,
                     }
                 }
 
-                // ── COMBAT ENGINEERS: heal player HQ on arrival ──
-                if(ent.combatEngineers && ent.team === 'p' && !ent._engineersDelivered) {
+                // ── COMBAT ENGINEERS: stay near HQ, heal every 15s, shoot nearby enemies ──
+                if(ent.combatEngineers && ent.team === 'p') {
                     const pHq = state.entities.find(e => e.id === 'p-hq');
-                    if(pHq && ent.y >= 88) {
-                        ent._engineersDelivered = true;
-                        const healAmt = Math.floor(pHq.maxHp * 0.08);
+                    // Initialize
+                    if(!ent._engInit) {
+                        ent._engInit = true;
+                        ent._healTimer = 0;
+                        // Snap to base position
+                        ent.x = pHq ? pHq.x : 50;
+                        ent.y = pHq ? Math.min(pHq.y + 3, 95) : 92;
+                        if(ent.el) { ent.el.style.left=ent.x+'%'; ent.el.style.top=ent.y+'%'; }
+                    }
+                    // Hold position near HQ — always drift back
+                    const homeX = pHq ? pHq.x : 50;
+                    const homeY = pHq ? Math.min(pHq.y + 4, 95) : 93;
+                    ent.x += (homeX - ent.x) * Math.min(1, dt * 2);
+                    ent.y += (homeY - ent.y) * Math.min(1, dt * 2);
+                    if(ent.el) { ent.el.style.left=ent.x+'%'; ent.el.style.top=ent.y+'%'; }
+                    // Heal HQ every 15 seconds
+                    ent._healTimer = (ent._healTimer || 0) + dt;
+                    if(ent._healTimer >= 15 && pHq && pHq.hp > 0) {
+                        ent._healTimer = 0;
+                        const healAmt = Math.floor(pHq.maxHp * 0.05);
                         pHq.hp = Math.min(pHq.maxHp, pHq.hp + healAmt);
                         if(pHq.hpFill) pHq.hpFill.style.width = Math.max(0, pHq.hp/pHq.maxHp*100) + '%';
-                        showNotification('🪖 Combat Engineers arrived! HQ repaired +' + healAmt + ' HP!');
-                        // Green pulse flash on HQ
+                        showNotification('🪖 Combat Engineers repaired HQ +' + healAmt + ' HP!');
                         if(pHq.el) {
-                            pHq.el.style.boxShadow = '0 0 30px rgba(74,222,128,0.9)';
-                            setTimeout(() => { if(pHq.el) pHq.el.style.boxShadow = ''; }, 1500);
+                            pHq.el.style.boxShadow = '0 0 20px rgba(74,222,128,0.8)';
+                            setTimeout(() => { if(pHq.el) pHq.el.style.boxShadow = ''; }, 800);
                         }
-                        // Remove the engineers after delivering (one-use)
-                        if(ent.el) ent.el.remove();
-                        state.entities.splice(state.entities.indexOf(ent), 1);
-                        continue;
                     }
+                    // Shoot enemies that come within range (r=15 units)
+                    const now2 = performance.now();
+                    if((now2 - (ent.lastAtk||0)) >= ent.atkCooldown) {
+                        const enemies2 = state.entities.filter(e => e.team === 'e' && e.type === 'unit' && e.hp > 0);
+                        let closeEnemy = null, closeDist = Infinity;
+                        for(const en of enemies2) {
+                            const dx2 = en.x - ent.x, dy2 = en.y - ent.y;
+                            const d2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+                            if(d2 < ent.r && d2 < closeDist) { closeDist = d2; closeEnemy = en; }
+                        }
+                        if(closeEnemy) {
+                            ent.lastAtk = now2;
+                            closeEnemy.hp -= ent.d;
+                            showDamageNumber(closeEnemy.x, closeEnemy.y, ent.d);
+                            if(closeEnemy.hp <= 0) {
+                                closeEnemy.hp = 0;
+                                if(closeEnemy.el) closeEnemy.el.remove();
+                                const idx2 = state.entities.indexOf(closeEnemy);
+                                if(idx2 !== -1) state.entities.splice(idx2, 1);
+                                state.kills = (state.kills||0)+1;
+                            }
+                        }
+                    }
+                    continue;
                 }
 
                 if(ent.hpFill) {
@@ -11236,15 +11495,34 @@ const FLAG_DATA = {            sau: null,
             });
         }
 
-        function startResearch(id) { 
-            if(state.resCompleted[id]) return;
-            state.researching = id; 
-            document.querySelectorAll('.res-btn').forEach((b, i) => {
-                if(i === id) {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
+        function syncResearchButtons() {
+            // Update the 3 in-battle research buttons to reflect state.resShopEquipped
+            const eq = state.resShopEquipped || [];
+            for(let i = 0; i < 3; i++) {
+                const id = eq[i];
+                const def = id ? ALL_RESEARCH_DEFS.find(r => r.id === id) : null;
+                const iconEl = document.getElementById('res-icon-' + i);
+                const labelEl = document.getElementById('res-label-' + i);
+                const btn = document.getElementById('res-' + i);
+                if(iconEl) iconEl.textContent = def ? def.icon : '—';
+                if(labelEl) labelEl.textContent = def ? def.name : 'Empty';
+                if(btn) {
+                    btn.style.opacity = def ? '1' : '0.3';
+                    btn.style.pointerEvents = def ? '' : 'none';
+                    // Mark completed if already done this battle
+                    if(def && state.resCompleted[i]) btn.classList.add('active');
+                    else btn.classList.remove('active');
                 }
+            }
+        }
+
+        function startResearch(id) {
+            const eq = state.resShopEquipped || [];
+            if(!eq[id]) return; // slot is empty
+            if(state.resCompleted[id]) return;
+            state.researching = id;
+            document.querySelectorAll('.res-btn').forEach((b, i) => {
+                i === id ? b.classList.add('active') : b.classList.remove('active');
             });
         }
 
@@ -11455,6 +11733,832 @@ const FLAG_DATA = {            sau: null,
             return names[id] || 'RESEARCH';
         }
 
+        // ══════════════════════════════════════════════
+        // ── RESEARCH SHOP SYSTEM ──
+        // ══════════════════════════════════════════════
+
+        // Each research: buy cost, upgrade tiers, and in-battle effect
+        // Base (built-in) researches — always owned, always shown in loadout slots 1-3
+        const BASE_RESEARCH_DEFS = [
+            {
+                id: 'mp_boost',
+                name: 'MP Boost',
+                icon: '⚡',
+                desc: 'Fills manpower faster during battle.',
+                buyCost: 0,
+                color: '#facc15',
+                border: '#854d0e',
+                builtin: true,
+                tiers: [
+                    { label: 'Standard',   desc: 'Normal manpower fill rate.' },
+                    { label: 'Accelerated', desc: '+25% faster manpower fill.' },
+                    { label: 'Overdrive',   desc: '+60% faster manpower fill.' },
+                ],
+                upgradeCosts: [2, 3],
+            },
+            {
+                id: 'armor',
+                name: 'Armor',
+                icon: '🛡️',
+                desc: 'Your units take reduced damage from enemy attacks.',
+                buyCost: 0,
+                color: '#94a3b8',
+                border: '#475569',
+                builtin: true,
+                tiers: [
+                    { label: 'Plating',    desc: 'Units take 20% less damage.' },
+                    { label: 'Hardened',   desc: 'Units take 30% less damage.' },
+                    { label: 'Composite',  desc: 'Units take 40% less damage.' },
+                ],
+                upgradeCosts: [2, 3],
+            },
+            {
+                id: 'intel_res',
+                name: 'Intel',
+                icon: '🔭',
+                desc: 'Jams enemy reinforcements and lifts the fog of war.',
+                buyCost: 0,
+                color: '#60a5fa',
+                border: '#1e3a8a',
+                builtin: true,
+                tiers: [
+                    { label: 'Basic Recon',  desc: 'Jams enemies and reveals fog. Earns +1 Intel Point on completion.' },
+                    { label: 'Deep Scan',    desc: 'Longer jam duration. Earns +2 Intel Points on completion.' },
+                    { label: 'Full Spectrum',desc: 'Max jam + full map reveal. Earns +3 Intel Points on completion.' },
+                ],
+                upgradeCosts: [2, 3],
+            },
+        ];
+
+        const RESEARCH_DEFS = [
+            {
+                id: 'grenades',
+                name: 'Grenade Training',
+                icon: '💣',
+                desc: 'Infantry, Rushers & Tanks throw grenades every 15 seconds that arc across 15% of the field, dealing AoE damage.',
+                buyCost: 2,
+                color: '#f97316',
+                border: '#92400e',
+                tiers: [
+                    { label: 'Basic Grenades',  desc: '60 damage, 15s cooldown. Roles: Balanced, Rusher, Tank.',  grenadeDmg: 60,  cooldown: 15 },
+                    { label: 'Improved Fuses',  desc: '85 damage, 12s cooldown. Wider blast radius.',              grenadeDmg: 85,  cooldown: 12 },
+                    { label: 'Fragmentation',   desc: '120 damage, 10s cooldown. All unit roles throw grenades.',  grenadeDmg: 120, cooldown: 10, allRoles: true },
+                ],
+                upgradeCosts: [2, 3],
+            },
+            {
+                id: 'trenches',
+                name: 'Trench Warfare',
+                icon: '🪖',
+                desc: 'Unlocks a Trench button in-battle. Units near a trench take less damage.',
+                buyCost: 2,
+                color: '#78716c',
+                border: '#57534e',
+                tiers: [
+                    { label: 'Basic Trenches',   desc: 'Place trenches for 30g. 35% damage reduction.',          dmgReduct: 0.35, trenchCost: 30 },
+                    { label: 'Reinforced Walls', desc: 'Place trenches for 20g. 45% damage reduction.',          dmgReduct: 0.45, trenchCost: 20 },
+                    { label: 'Fortified Lines',  desc: 'Place trenches for 10g. 55% reduction. Wider zone.',     dmgReduct: 0.55, trenchCost: 10, widerZone: true },
+                ],
+                upgradeCosts: [2, 3],
+            },
+        ];
+
+        // All defs combined for lookup
+        const ALL_RESEARCH_DEFS = [...BASE_RESEARCH_DEFS, ...RESEARCH_DEFS];
+
+        // meta.resShop = { owned: { mp_boost: { tier: 0 }, ... }, equipped: ['mp_boost','armor','intel_res'] }
+        function initResShop() {
+            if(!meta.resShop) {
+                meta.resShop = { owned: {}, equipped: [] };
+            }
+            // Always ensure base researches are owned (never lose them)
+            BASE_RESEARCH_DEFS.forEach(b => {
+                if(!meta.resShop.owned[b.id]) meta.resShop.owned[b.id] = { tier: 0 };
+            });
+            // Default: if equipped is empty, fill slots with the 3 base researches
+            if(!meta.resShop.equipped || meta.resShop.equipped.length === 0) {
+                meta.resShop.equipped = BASE_RESEARCH_DEFS.map(b => b.id);
+            }
+            saveResShop();
+        }
+
+        function saveResShop() {
+            localStorage.setItem('wt_rshop2', JSON.stringify(meta.resShop));
+            // Keep old key in sync for battle state
+            meta.resShopEquipped = [...(meta.resShop?.equipped || [])];
+            localStorage.setItem('wt_rshop', JSON.stringify(meta.resShopEquipped));
+        }
+
+        function getResearchTier(id) {
+            initResShop();
+            return (meta.resShop.owned[id]?.tier ?? -1);
+        }
+
+        function isResearchOwned(id) { return getResearchTier(id) >= 0; }
+        function isResearchEquipped(id) { initResShop(); return (meta.resShop.equipped || []).includes(id); }
+        function getResearchDef(id) { return ALL_RESEARCH_DEFS.find(r => r.id === id); }
+
+        function buyResearch(id) {
+            initResShop();
+            const def = ALL_RESEARCH_DEFS.find(r => r.id === id);
+            if(!def) return;
+            if(isResearchOwned(id)) { showNotification('Already owned!'); return; }
+            if((meta.intelPoints || 0) < def.buyCost) { showNotification(`❌ Need ${def.buyCost} Intel Points!`); return; }
+            meta.intelPoints -= def.buyCost;
+            localStorage.setItem('wt_intel', meta.intelPoints);
+            meta.resShop.owned[id] = { tier: 0 };
+            saveResShop();
+            showNotification(`🔬 ${def.icon} ${def.name} purchased!`);
+            renderResearchShopPanel();
+            updateResShopTabBadge();
+        }
+
+        function upgradeResearch(id) {
+            initResShop();
+            const def = ALL_RESEARCH_DEFS.find(r => r.id === id);
+            if(!def || !isResearchOwned(id)) return;
+            const current = meta.resShop.owned[id].tier;
+            const nextTier = current + 1;
+            if(nextTier >= def.tiers.length) { showNotification('Already at max tier!'); return; }
+            const cost = def.upgradeCosts[current];
+            if((meta.intelPoints || 0) < cost) { showNotification(`❌ Need ${cost} Intel Points to upgrade!`); return; }
+            meta.intelPoints -= cost;
+            localStorage.setItem('wt_intel', meta.intelPoints);
+            meta.resShop.owned[id].tier = nextTier;
+            saveResShop();
+            showNotification(`⬆️ ${def.icon} ${def.name} upgraded to ${def.tiers[nextTier].label}!`);
+            renderResearchShopPanel();
+            updateResShopTabBadge();
+        }
+
+        function equipResearch(id) {
+            initResShop();
+            if(!isResearchOwned(id)) return;
+            if(isResearchEquipped(id)) { showNotification('Already equipped!'); return; }
+            if((meta.resShop.equipped || []).length >= 3) { showNotification('⚠️ Max 3 equipped! Unequip one first.'); return; }
+            meta.resShop.equipped = [...(meta.resShop.equipped || []), id];
+            saveResShop();
+            state.resShopEquipped = [...meta.resShop.equipped];
+            const def = ALL_RESEARCH_DEFS.find(r => r.id === id);
+            showNotification(`✅ ${def?.icon || ''} ${def?.name || id} equipped!`);
+            renderResearchShopPanel();
+        }
+
+        function unequipResearch(id) {
+            initResShop();
+            meta.resShop.equipped = (meta.resShop.equipped || []).filter(e => e !== id);
+            saveResShop();
+            state.resShopEquipped = [...meta.resShop.equipped];
+            const def = ALL_RESEARCH_DEFS.find(r => r.id === id);
+            showNotification(`↩️ ${def?.name || id} unequipped.`);
+            renderResearchShopPanel();
+        }
+
+        let _rsTab = 'shop';
+        function showRSTab(tab) {
+            _rsTab = tab;
+            document.getElementById('rsp-shop-panel').style.display = tab === 'shop' ? '' : 'none';
+            document.getElementById('rsp-owned-panel').style.display = tab === 'owned' ? '' : 'none';
+            document.getElementById('rst-shop').style.borderColor = tab === 'shop' ? '#3b82f6' : '#3f3f46';
+            document.getElementById('rst-shop').style.color = tab === 'shop' ? '#60a5fa' : '#71717a';
+            document.getElementById('rst-shop').style.background = tab === 'shop' ? 'linear-gradient(135deg,#0a0a18,#12122a)' : '#18181b';
+            document.getElementById('rst-owned').style.borderColor = tab === 'owned' ? '#22c55e' : '#3f3f46';
+            document.getElementById('rst-owned').style.color = tab === 'owned' ? '#4ade80' : '#71717a';
+            document.getElementById('rst-owned').style.background = tab === 'owned' ? 'linear-gradient(135deg,#052e16,#0a3d1e)' : '#18181b';
+        }
+
+        function renderResearchShopPanel() {
+            initResShop();
+            const intel = meta.intelPoints || 0;
+            const equipped = meta.resShop.equipped || [];
+
+            const ic = document.getElementById('rsp-intel-count'); if(ic) ic.textContent = intel;
+            const ec = document.getElementById('rsp-equip-count'); if(ec) ec.textContent = equipped.length;
+
+            // Single unified 3-slot loadout
+            const loadout = document.getElementById('rsp-loadout');
+            if(loadout) {
+                loadout.innerHTML = '';
+                for(let i = 0; i < 3; i++) {
+                    const slot = document.createElement('div');
+                    const filled = i < equipped.length;
+                    const def = filled ? ALL_RESEARCH_DEFS.find(r => r.id === equipped[i]) : null;
+                    const tier = def ? Math.max(0, getResearchTier(def.id)) : 0;
+                    const isBase = def ? !!def.builtin : false;
+                    slot.style.cssText = `flex:1;background:${filled ? (isBase ? 'linear-gradient(135deg,#0a1628,#0f1e3d)' : '#052e16') : '#111'};border:${filled ? `1px solid ${def.border}` : '1px dashed #27272a'};border-radius:7px;padding:6px 7px;display:flex;align-items:center;gap:5px;min-width:0;`;
+                    slot.innerHTML = filled
+                        ? `<span style="font-size:14px;flex-shrink:0;">${def.icon}</span><div style="min-width:0;"><div style="font-family:'Black Ops One',cursive;font-size:8px;color:${def.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${def.name}</div><div style="font-size:7px;color:${def.border};">T${tier+1}${isBase?' 🔒':''}</div></div>`
+                        : `<span style="font-size:8px;color:#3f3f46;opacity:0.5;margin:auto;">empty</span>`;
+                    loadout.appendChild(slot);
+                }
+            }
+
+            // Helper to render a research card (all cards fully manageable)
+            function makeResCard(def, opts = {}) {
+                const { showBuy } = opts;
+                const tier = Math.max(0, getResearchTier(def.id));
+                const tierData = def.tiers[tier];
+                const isEq = isResearchEquipped(def.id);
+                const isBase = !!def.builtin;
+                const canUpgrade = tier < def.tiers.length - 1;
+                const upgCost = canUpgrade ? def.upgradeCosts[tier] : 0;
+                const canAffordUpg = intel >= upgCost;
+                const isFull = equipped.length >= 3 && !isEq;
+                const canAffordBuy = intel >= def.buyCost;
+
+                const card = document.createElement('div');
+                card.style.cssText = `background:${isEq ? 'linear-gradient(135deg,#060f1e,#0a1628)' : 'linear-gradient(135deg,#0a0a18,#12122a)'};border:1.5px solid ${isEq ? def.border : def.border + '88'};border-radius:10px;padding:11px;margin-bottom:8px;transition:border-color 0.2s;`;
+                card.innerHTML = `
+                    <div style="display:flex;align-items:flex-start;gap:9px;">
+                        <span style="font-size:24px;flex-shrink:0;filter:drop-shadow(0 0 5px ${def.color}55);">${def.icon}</span>
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:3px;">
+                                <span style="font-family:'Black Ops One',cursive;font-size:12px;color:${def.color};">${def.name}</span>
+                                <span style="background:#111;border:1px solid ${def.border};color:${def.color};border-radius:8px;padding:1px 5px;font-size:7px;font-family:'Black Ops One',cursive;">T${tier+1} · ${tierData.label}</span>
+                                ${isBase ? '<span style="background:#0a1628;border:1px solid #1e3a8a44;color:#475569;border-radius:8px;padding:1px 5px;font-size:7px;">built-in</span>' : ''}
+                                ${isEq ? '<span style="background:#052e16;border:1px solid #22c55e;color:#4ade80;border-radius:8px;padding:1px 5px;font-size:7px;font-family:\'Black Ops One\',cursive;">✓ EQUIPPED</span>' : ''}
+                            </div>
+                            <div style="font-size:9px;color:#94a3b8;margin-bottom:5px;line-height:1.4;">${tierData.desc}</div>
+                            ${canUpgrade ? `<div style="background:#0d0d18;border:1px solid ${def.border}33;border-radius:6px;padding:4px 8px;margin-bottom:6px;font-size:8px;color:#475569;">↑ T${tier+2}: ${def.tiers[tier+1].desc}</div>` : `<div style="font-size:8px;color:#22c55e;margin-bottom:5px;">✓ MAX TIER</div>`}
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                                ${showBuy
+                                    ? `<button onclick="buyResearch('${def.id}')" style="background:${canAffordBuy?'linear-gradient(135deg,#1e3a8a,#1d4ed8)':'#18181b'};border:1px solid ${canAffordBuy?'#3b82f6':'#3f3f46'};color:${canAffordBuy?'#93c5fd':'#52525b'};border-radius:6px;padding:4px 12px;font-family:'Black Ops One',cursive;font-size:9px;cursor:${canAffordBuy?'pointer':'not-allowed'};">${canAffordBuy?`BUY — ${def.buyCost} 🔭`:'NEED INTEL'}</button>`
+                                    : isEq
+                                        ? `<button onclick="unequipResearch('${def.id}')" style="background:#18181b;border:1px solid #ef4444;color:#fca5a5;border-radius:6px;padding:4px 10px;font-family:'Black Ops One',cursive;font-size:8px;cursor:pointer;">UNEQUIP</button>`
+                                        : `<button onclick="equipResearch('${def.id}')" style="background:${!isFull?'linear-gradient(135deg,#052e16,#0a3d1e)':'#18181b'};border:1px solid ${!isFull?'#16a34a':'#3f3f46'};color:${!isFull?'#4ade80':'#52525b'};border-radius:6px;padding:4px 10px;font-family:'Black Ops One',cursive;font-size:8px;cursor:${!isFull?'pointer':'not-allowed'};">${isFull?'SLOTS FULL':'EQUIP'}</button>`
+                                }
+                                ${canUpgrade ? `<button onclick="upgradeResearch('${def.id}')" style="background:${canAffordUpg?'linear-gradient(135deg,#1c1400,#2d2000)':'#18181b'};border:1px solid ${canAffordUpg?'#b45309':'#3f3f46'};color:${canAffordUpg?'#f59e0b':'#52525b'};border-radius:6px;padding:4px 10px;font-family:'Black Ops One',cursive;font-size:8px;cursor:${canAffordUpg?'pointer':'not-allowed'};">⬆️ UPGRADE (${upgCost} 🔭)</button>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                return card;
+            }
+
+            // Shop tab — built-ins (for upgrading) + unowned purchasable
+            const shopList = document.getElementById('rsp-shop-list');
+            if(shopList) {
+                shopList.innerHTML = '';
+                const hdr = (txt) => { const d=document.createElement('div'); d.style.cssText='font-size:8px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;'; d.textContent=txt; return d; };
+
+                shopList.appendChild(hdr('🔒 Built-in — always owned, upgradeable'));
+                BASE_RESEARCH_DEFS.forEach(def => shopList.appendChild(makeResCard(def)));
+
+                const unowned = RESEARCH_DEFS.filter(d => !isResearchOwned(d.id));
+                if(unowned.length > 0) {
+                    shopList.appendChild(hdr('🛒 Available to Purchase'));
+                    unowned.forEach(def => shopList.appendChild(makeResCard(def, { showBuy: true })));
+                } else if(RESEARCH_DEFS.length > 0) {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'font-size:9px;color:#3f3f46;padding:8px 0;text-align:center;';
+                    d.textContent = 'All research purchased! See Owned tab.';
+                    shopList.appendChild(d);
+                }
+            }
+
+            // Owned tab — all owned research (base + purchased), all manageable
+            const ownedList = document.getElementById('rsp-owned-list');
+            if(ownedList) {
+                ownedList.innerHTML = '';
+                const hdr = (txt) => { const d=document.createElement('div'); d.style.cssText='font-size:8px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px;'; d.textContent=txt; return d; };
+
+                ownedList.appendChild(hdr('🔒 Built-in'));
+                BASE_RESEARCH_DEFS.forEach(def => ownedList.appendChild(makeResCard(def)));
+
+                const purchOwned = RESEARCH_DEFS.filter(d => isResearchOwned(d.id));
+                if(purchOwned.length > 0) {
+                    ownedList.appendChild(hdr('📋 Purchased'));
+                    purchOwned.forEach(def => ownedList.appendChild(makeResCard(def)));
+                } else {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'font-size:9px;color:#3f3f46;padding:8px 0;';
+                    d.textContent = 'No purchased research yet — buy from Shop tab.';
+                    ownedList.appendChild(d);
+                }
+            }
+        }
+
+        function updateResShopTabBadge() {
+            const badge = document.getElementById('resshop-intel-tab-badge');
+            const intel = meta.intelPoints || 0;
+            if(badge) {
+                badge.textContent = intel > 0 ? intel + ' 🔭' : '';
+                badge.style.display = intel > 0 ? '' : 'none';
+            }
+        }
+
+        // Load resShop from storage on init
+        (function loadResShop() {
+            const saved = localStorage.getItem('wt_rshop2');
+            if(saved) {
+                try { meta.resShop = JSON.parse(saved); } catch(e) {}
+            }
+            initResShop();
+            updateResShopTabBadge();
+        })();
+
+        // Keep old functions as stubs so nothing breaks
+        function openResearchShop() { showPanel('resshop-panel'); }
+        function closeResearchShop() {}
+        function renderResearchShop() { renderResearchShopPanel(); }
+
+        function updateResShopHUDBtn() { updateResShopTabBadge(); }
+
+        // ══════════════════════════════════════════════
+        // ── SPY MINIGAME SYSTEM ──
+        // ══════════════════════════════════════════════
+
+        const SPY_OPS = [
+            {
+                id: 'code_break',
+                name: 'CODE BREAK',
+                icon: '💻',
+                desc: 'Decrypt the enemy code sequence. Tap the buttons in the correct order!',
+                reward: [1, 2],
+                difficulty: 'EASY',
+                diffColor: '#22c55e',
+            },
+            {
+                id: 'tail_suspect',
+                name: 'TAIL SUSPECT',
+                icon: '🚶',
+                desc: 'Track the enemy spy through the crowd. Pick the right path!',
+                reward: [1, 2],
+                difficulty: 'EASY',
+                diffColor: '#22c55e',
+            },
+            {
+                id: 'defuse_bomb',
+                name: 'DEFUSE DEVICE',
+                icon: '💣',
+                desc: 'Cut the correct wire sequence before time runs out!',
+                reward: [2, 3],
+                difficulty: 'HARD',
+                diffColor: '#ef4444',
+            },
+            {
+                id: 'safe_crack',
+                name: 'SAFE CRACK',
+                icon: '🔐',
+                desc: 'Find the correct 3-digit combination. You have 4 tries!',
+                reward: [2, 3],
+                difficulty: 'MEDIUM',
+                diffColor: '#f59e0b',
+            },
+            {
+                id: 'morse_decode',
+                name: 'MORSE DECODE',
+                icon: '📡',
+                desc: 'Decode the Morse signal and select the right letter!',
+                reward: [1, 2],
+                difficulty: 'MEDIUM',
+                diffColor: '#f59e0b',
+            },
+        ];
+
+        let _spyGameActive = false;
+        let _spyGameData = null;
+
+        function openSpyMinigame() {
+            _spyGameActive = false;
+            _spyGameData = null;
+            const modal = document.getElementById('spy-minigame-modal');
+            const content = document.getElementById('spy-mg-content');
+            const subtitle = document.getElementById('spy-mg-subtitle');
+            subtitle.textContent = 'Choose your mission type';
+            // Show op selector
+            content.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                    ${SPY_OPS.map((op, i) => `
+                        <div onclick="startSpyOp('${op.id}')" style="background:#0a0f0a;border:1.5px solid #166534;border-radius:10px;padding:10px 8px;cursor:pointer;transition:all 0.2s;text-align:center;" onmouseover="this.style.borderColor='#4ade80';this.style.boxShadow='0 0 10px rgba(74,222,128,0.3)'" onmouseout="this.style.borderColor='#166534';this.style.boxShadow=''">
+                            <div style="font-size:22px;margin-bottom:4px;">${op.icon}</div>
+                            <div style="font-family:'Black Ops One',cursive;font-size:9px;color:#4ade80;">${op.name}</div>
+                            <div style="font-size:7px;color:${op.diffColor};margin-top:2px;">⚡ ${op.difficulty}</div>
+                            <div style="font-size:7px;color:#16a34a;margin-top:1px;">+${op.reward[0]}-${op.reward[1]} 🔭</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="font-size:8px;color:#166534;text-align:center;letter-spacing:1px;">UNLIMITED MISSIONS · NO COOLDOWN</div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function closeSpyMinigame() {
+            document.getElementById('spy-minigame-modal').style.display = 'none';
+            _spyGameActive = false;
+        }
+
+        function startSpyOp(opId) {
+            const op = SPY_OPS.find(o => o.id === opId);
+            if(!op) return;
+            const subtitle = document.getElementById('spy-mg-subtitle');
+            const content = document.getElementById('spy-mg-content');
+            subtitle.textContent = op.icon + ' ' + op.name + ' · ' + op.difficulty;
+            _spyGameActive = true;
+            _spyGameData = { op, startTime: Date.now() };
+
+            if(opId === 'code_break') runCodeBreak(op, content);
+            else if(opId === 'tail_suspect') runTailSuspect(op, content);
+            else if(opId === 'defuse_bomb') runDefuseBomb(op, content);
+            else if(opId === 'safe_crack') runSafeCrack(op, content);
+            else if(opId === 'morse_decode') runMorseDecode(op, content);
+        }
+
+        function spySuccess(op, bonus) {
+            _spyGameActive = false;
+            const base = op.reward[0] + Math.floor(Math.random() * (op.reward[1] - op.reward[0] + 1));
+            const total = base + (bonus || 0);
+            meta.intelPoints = (meta.intelPoints || 0) + total;
+            localStorage.setItem('wt_intel', meta.intelPoints);
+            updateResShopTabBadge();
+            const content = document.getElementById('spy-mg-content');
+            content.innerHTML = `
+                <div style="text-align:center;padding:16px 0;">
+                    <div style="font-size:48px;margin-bottom:10px;">✅</div>
+                    <div style="font-family:'Black Ops One',cursive;font-size:16px;color:#4ade80;margin-bottom:6px;">MISSION SUCCESS</div>
+                    <div style="font-size:28px;font-weight:900;color:#93c5fd;font-family:'Black Ops One',cursive;">+${total} 🔭</div>
+                    <div style="font-size:9px;color:#166534;margin-top:4px;">Intel Points earned</div>
+                    <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;">
+                        <button onclick="openSpyMinigame()" style="background:linear-gradient(135deg,#052e16,#0a3d1e);border:1px solid #16a34a;color:#4ade80;border-radius:8px;padding:8px 20px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">▶ ANOTHER OP</button>
+                        <button onclick="closeSpyMinigame();renderResearchShopPanel();" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:8px;padding:8px 16px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">DONE</button>
+                    </div>
+                </div>`;
+        }
+
+        function spyFail(op) {
+            _spyGameActive = false;
+            const content = document.getElementById('spy-mg-content');
+            content.innerHTML = `
+                <div style="text-align:center;padding:16px 0;">
+                    <div style="font-size:48px;margin-bottom:10px;">❌</div>
+                    <div style="font-family:'Black Ops One',cursive;font-size:16px;color:#ef4444;margin-bottom:6px;">MISSION FAILED</div>
+                    <div style="font-size:9px;color:#7f1d1d;margin-top:4px;">No Intel earned — try again!</div>
+                    <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;">
+                        <button onclick="startSpyOp('${op.id}')" style="background:linear-gradient(135deg,#1a0505,#2d0a0a);border:1px solid #dc2626;color:#f87171;border-radius:8px;padding:8px 20px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">↩ RETRY</button>
+                        <button onclick="openSpyMinigame()" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:8px;padding:8px 16px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">OTHER OP</button>
+                    </div>
+                </div>`;
+        }
+
+        // ── CODE BREAK: Memorize sequence of 4 colors, repeat it ──
+        function runCodeBreak(op, el) {
+            const colors = ['#ef4444','#3b82f6','#22c55e','#f59e0b'];
+            const labels = ['RED','BLUE','GREEN','GOLD'];
+            const seqLen = 4;
+            const seq = Array.from({length: seqLen}, () => Math.floor(Math.random() * 4));
+            let playerSeq = [];
+            let showPhase = true;
+
+            function render() {
+                el.innerHTML = `
+                    <div style="font-size:9px;color:#4ade80;margin-bottom:10px;text-align:center;">${showPhase ? '👁️ MEMORIZE THE SEQUENCE...' : '🎯 NOW REPEAT IT (' + playerSeq.length + '/' + seqLen + ')'}</div>
+                    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;" id="spy-seq-display">
+                        ${seq.map((c, i) => `<div style="width:28px;height:28px;border-radius:6px;background:${showPhase || i < playerSeq.length ? colors[c] : '#27272a'};border:2px solid ${colors[c]}44;transition:background 0.3s;"></div>`).join('')}
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        ${colors.map((c, i) => `
+                            <button onclick="codeBreakTap(${i})" style="background:${c}22;border:2px solid ${c};border-radius:8px;padding:12px;font-family:'Black Ops One',cursive;font-size:10px;color:${c};cursor:pointer;transition:all 0.1s;" onmouseover="this.style.background='${c}44'" onmouseout="this.style.background='${c}22'" ${showPhase ? 'disabled' : ''}>
+                                ${labels[i]}
+                            </button>`).join('')}
+                    </div>
+                `;
+            }
+
+            window.codeBreakTap = function(colorIdx) {
+                if(!_spyGameActive || showPhase) return;
+                playerSeq.push(colorIdx);
+                // Check if correct so far
+                const pos = playerSeq.length - 1;
+                if(playerSeq[pos] !== seq[pos]) { spyFail(op); return; }
+                if(playerSeq.length === seqLen) { spySuccess(op, 0); return; }
+                render();
+            };
+
+            render();
+            // Show sequence flash animation
+            setTimeout(() => {
+                showPhase = false;
+                render();
+            }, 2500);
+        }
+
+        // ── TAIL SUSPECT: Pick the right door 3 times ──
+        function runTailSuspect(op, el) {
+            let round = 0;
+            const totalRounds = 3;
+            const doors = ['🚪','🚪','🚪'];
+            let correctDoor = 0;
+
+            function nextRound() {
+                round++;
+                if(round > totalRounds) { spySuccess(op, 0); return; }
+                correctDoor = Math.floor(Math.random() * 3);
+                el.innerHTML = `
+                    <div style="font-size:9px;color:#4ade80;text-align:center;margin-bottom:10px;">Round ${round}/${totalRounds} — The suspect ducked through one of these doors!</div>
+                    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
+                        ${doors.map((d, i) => `
+                            <button onclick="tailTap(${i})" style="background:#0d180d;border:2px solid #166534;border-radius:10px;padding:20px 14px;font-size:36px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor='#166534'">${d}</button>
+                        `).join('')}
+                    </div>
+                    <div style="font-size:8px;color:#166534;text-align:center;">50/50 each door — trust your instincts!</div>
+                `;
+            }
+
+            window.tailTap = function(doorIdx) {
+                if(!_spyGameActive) return;
+                if(doorIdx === correctDoor) {
+                    el.innerHTML = `<div style="text-align:center;padding:10px;"><div style="font-size:32px;">✅</div><div style="color:#4ade80;font-family:'Black Ops One',cursive;font-size:12px;">Correct! Suspect spotted!</div></div>`;
+                    setTimeout(nextRound, 700);
+                } else {
+                    el.innerHTML = `<div style="text-align:center;padding:10px;"><div style="font-size:32px;">❌</div><div style="color:#ef4444;font-family:'Black Ops One',cursive;font-size:12px;">Lost the trail!</div></div>`;
+                    setTimeout(() => spyFail(op), 700);
+                }
+            };
+
+            nextRound();
+        }
+
+        // ── DEFUSE BOMB: Cut wires in correct order (countdown) ──
+        function runDefuseBomb(op, el) {
+            const wires = ['🔴','🟡','🟢','🔵','⚪'];
+            const wireColors = ['#ef4444','#eab308','#22c55e','#3b82f6','#d4d4d8'];
+            const wireNames = ['RED','YELLOW','GREEN','BLUE','WHITE'];
+            // Pick 3 wires in random order
+            const shuffled = [...Array(5).keys()].sort(() => Math.random() - 0.5);
+            const correctOrder = shuffled.slice(0, 3);
+            let cutSoFar = [];
+            let timeLeft = 12;
+            let done = false;
+            let failed = false;
+
+            function render() {
+                el.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <div style="font-size:9px;color:#ef4444;font-family:'Black Ops One',cursive;">⏱️ ${timeLeft}s</div>
+                        <div style="font-size:9px;color:#f59e0b;">Cut: ${cutSoFar.length}/${correctOrder.length} wires</div>
+                    </div>
+                    <div style="font-size:8px;color:#f59e0b;text-align:center;margin-bottom:10px;">🔌 Cut wires in the correct sequence!</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+                        ${wireNames.map((w, i) => {
+                            const alreadyCut = cutSoFar.includes(i);
+                            return `<button onclick="cutWire(${i})" style="background:${alreadyCut ? '#111' : wireColors[i]+'22'};border:2px solid ${alreadyCut ? '#27272a' : wireColors[i]};border-radius:8px;padding:8px 14px;font-family:'Black Ops One',cursive;font-size:10px;color:${alreadyCut ? '#27272a' : wireColors[i]};cursor:${alreadyCut ? 'not-allowed' : 'pointer'};text-decoration:${alreadyCut ? 'line-through' : 'none'};transition:all 0.15s;" ${alreadyCut ? 'disabled' : ''}>${wires[i]} ${w} WIRE</button>`;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            window.cutWire = function(wireIdx) {
+                if(!_spyGameActive || done || failed) return;
+                const nextExpected = correctOrder[cutSoFar.length];
+                cutSoFar.push(wireIdx);
+                if(wireIdx !== nextExpected) {
+                    done = true;
+                    clearInterval(_bombInterval);
+                    spyFail(op);
+                    return;
+                }
+                if(cutSoFar.length === correctOrder.length) {
+                    done = true;
+                    clearInterval(_bombInterval);
+                    // Bonus intel for time remaining
+                    const bonus = timeLeft > 8 ? 1 : 0;
+                    spySuccess(op, bonus);
+                    return;
+                }
+                render();
+            };
+
+            render();
+            window._bombInterval = setInterval(() => {
+                if(done || !_spyGameActive) { clearInterval(_bombInterval); return; }
+                timeLeft--;
+                if(timeLeft <= 0) {
+                    clearInterval(_bombInterval);
+                    done = true;
+                    spyFail(op);
+                    return;
+                }
+                const timerEl = el.querySelector('div');
+                if(timerEl) timerEl.innerHTML = `<div style="font-size:9px;color:#ef4444;font-family:'Black Ops One',cursive;">⏱️ ${timeLeft}s</div><div style="font-size:9px;color:#f59e0b;">Cut: ${cutSoFar.length}/${correctOrder.length} wires</div>`;
+            }, 1000);
+        }
+
+        // ── SAFE CRACK: Guess 3-digit combo in 4 tries (like Wordle) ──
+        function runSafeCrack(op, el) {
+            const combo = [Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1];
+            let triesLeft = 4;
+            let history = [];
+
+            function render() {
+                el.innerHTML = `
+                    <div style="font-size:9px;color:#f59e0b;text-align:center;margin-bottom:8px;">🔐 Guess the 3-digit combination (${triesLeft} tries left)</div>
+                    <div id="safe-history" style="margin-bottom:10px;min-height:60px;">
+                        ${history.map(h => `
+                            <div style="display:flex;gap:6px;justify-content:center;margin-bottom:4px;">
+                                ${h.guess.map((d, i) => `<div style="width:28px;height:28px;border-radius:6px;background:${h.result[i]==='correct'?'#16a34a':h.result[i]==='close'?'#b45309':'#27272a'};display:flex;align-items:center;justify-content:center;font-family:'Black Ops One',cursive;font-size:13px;color:white;">${d}</div>`).join('')}
+                                <span style="font-size:8px;color:#52525b;align-self:center;">${h.hint}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
+                        <input id="safe-d1" type="number" min="1" max="9" maxlength="1" style="width:40px;height:40px;text-align:center;background:#111;border:2px solid #b45309;border-radius:8px;color:#f59e0b;font-family:'Black Ops One',cursive;font-size:18px;outline:none;" oninput="if(this.value.length>1)this.value=this.value.slice(-1);if(this.value<1||this.value>9)this.value='';document.getElementById('safe-d2').focus();">
+                        <input id="safe-d2" type="number" min="1" max="9" maxlength="1" style="width:40px;height:40px;text-align:center;background:#111;border:2px solid #b45309;border-radius:8px;color:#f59e0b;font-family:'Black Ops One',cursive;font-size:18px;outline:none;" oninput="if(this.value.length>1)this.value=this.value.slice(-1);if(this.value<1||this.value>9)this.value='';document.getElementById('safe-d3').focus();">
+                        <input id="safe-d3" type="number" min="1" max="9" maxlength="1" style="width:40px;height:40px;text-align:center;background:#111;border:2px solid #b45309;border-radius:8px;color:#f59e0b;font-family:'Black Ops One',cursive;font-size:18px;outline:none;" oninput="if(this.value.length>1)this.value=this.value.slice(-1);if(this.value<1||this.value>9)this.value='';">
+                    </div>
+                    <button onclick="safeCrackGuess()" style="width:100%;background:linear-gradient(135deg,#1c1400,#2d2000);border:2px solid #b45309;color:#f59e0b;border-radius:8px;padding:8px;font-family:'Black Ops One',cursive;font-size:12px;cursor:pointer;">🔑 TRY COMBINATION</button>
+                    <div style="font-size:7px;color:#52525b;text-align:center;margin-top:6px;">🟩 Correct · 🟧 Right digit wrong place · ⬛ Wrong</div>
+                `;
+            }
+
+            window.safeCrackGuess = function() {
+                const d1 = parseInt(document.getElementById('safe-d1')?.value);
+                const d2 = parseInt(document.getElementById('safe-d2')?.value);
+                const d3 = parseInt(document.getElementById('safe-d3')?.value);
+                if(isNaN(d1)||isNaN(d2)||isNaN(d3)) { return; }
+                const guess = [d1, d2, d3];
+                triesLeft--;
+                const result = guess.map((d, i) => d === combo[i] ? 'correct' : combo.includes(d) ? 'close' : 'wrong');
+                const correct = result.filter(r=>r==='correct').length;
+                const close = result.filter(r=>r==='close').length;
+                const hint = `${correct} right, ${close} close`;
+                history.push({ guess, result, hint });
+                if(result.every(r=>r==='correct')) { spySuccess(op, triesLeft); return; }
+                if(triesLeft <= 0) { spyFail(op); return; }
+                render();
+            };
+
+            render();
+        }
+
+        // ── MORSE DECODE: Show dots/dashes, pick the right letter ──
+        function runMorseDecode(op, el) {
+            const MORSE = {'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..'};
+            const letters = Object.keys(MORSE);
+            const target = letters[Math.floor(Math.random()*letters.length)];
+            const code = MORSE[target];
+            // Pick 3 wrong answers
+            const wrong = letters.filter(l=>l!==target).sort(()=>Math.random()-0.5).slice(0,3);
+            const choices = [target, ...wrong].sort(()=>Math.random()-0.5);
+            let round = 0;
+            const totalRounds = 3;
+
+            function nextRound() {
+                const t = letters[Math.floor(Math.random()*letters.length)];
+                const c = MORSE[t];
+                const w2 = letters.filter(l=>l!==t).sort(()=>Math.random()-0.5).slice(0,3);
+                const ch = [t,...w2].sort(()=>Math.random()-0.5);
+                round++;
+                el.innerHTML = `
+                    <div style="font-size:9px;color:#60a5fa;text-align:center;margin-bottom:6px;">📡 Round ${round}/${totalRounds} — Decode the signal</div>
+                    <div style="background:#0a0f18;border:1px solid #1e3a8a;border-radius:8px;padding:12px;text-align:center;margin-bottom:12px;">
+                        <div style="font-family:'Black Ops One',cursive;font-size:28px;color:#93c5fd;letter-spacing:6px;">${c}</div>
+                        <div style="font-size:8px;color:#475569;margin-top:4px;">· = dot &nbsp;|&nbsp; — = dash</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        ${ch.map(letter => `<button onclick="morseTap('${letter}','${t}',${round})" style="background:#0a1628;border:2px solid #1e3a8a;border-radius:8px;padding:12px;font-family:'Black Ops One',cursive;font-size:18px;color:#60a5fa;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#1e3a8a'">${letter}</button>`).join('')}
+                    </div>
+                `;
+            }
+
+            window.morseTap = function(chosen, correct, r) {
+                if(!_spyGameActive) return;
+                if(chosen === correct) {
+                    if(r >= totalRounds) { spySuccess(op, 0); }
+                    else {
+                        el.innerHTML = `<div style="text-align:center;padding:10px;"><div style="font-size:28px;">✅</div><div style="color:#4ade80;font-family:'Black Ops One',cursive;font-size:11px;">Correct! Signal decoded!</div></div>`;
+                        setTimeout(nextRound, 600);
+                    }
+                } else {
+                    el.innerHTML = `<div style="text-align:center;padding:10px;"><div style="font-size:28px;">❌</div><div style="color:#ef4444;font-family:'Black Ops One',cursive;font-size:11px;">Wrong letter — ${correct} was correct!</div></div>`;
+                    setTimeout(() => spyFail(op), 700);
+                }
+            };
+
+            nextRound();
+        }
+
+        // ══════════════════════════════════════════════
+        // ── INTEL DAILY OP ──
+        // ══════════════════════════════════════════════
+        function openIntelDailyOp() {
+            const lastDailyKey = 'wt_intel_daily';
+            const lastDate = localStorage.getItem(lastDailyKey);
+            const today = new Date().toDateString();
+            const modal = document.getElementById('intel-daily-modal');
+            const content = document.getElementById('intel-daily-content');
+
+            if(lastDate === today) {
+                content.innerHTML = `
+                    <div style="text-align:center;padding:20px 0;">
+                        <div style="font-size:36px;margin-bottom:10px;">⏳</div>
+                        <div style="font-family:'Black Ops One',cursive;font-size:13px;color:#f87171;margin-bottom:6px;">MISSION DEBRIEFED</div>
+                        <div style="font-size:9px;color:#7f1d1d;">Daily field mission already completed.<br>Return tomorrow for a new assignment.</div>
+                    </div>`;
+                modal.style.display = 'flex';
+                return;
+            }
+
+            // Pick a random daily mission
+            const missions = [
+                { q: 'Which country borders the most other countries?', a: 'Russia', opts: ['China', 'Russia', 'Brazil', 'USA'] },
+                { q: 'What does CIA stand for?', a: 'Central Intelligence Agency', opts: ['Central Intelligence Agency', 'Combat Intel Agency', 'Counter Intel Authority', 'Classified Intel Archive'] },
+                { q: 'In which war was the "Enigma" machine used?', a: 'World War II', opts: ['World War I', 'World War II', 'Cold War', 'Korean War'] },
+                { q: 'Which city is the headquarters of NATO?', a: 'Brussels', opts: ['Berlin', 'London', 'Brussels', 'Paris'] },
+                { q: 'What is the name of Russia\'s main intelligence service?', a: 'FSB', opts: ['KGB', 'FSB', 'SVR', 'GRU'] },
+                { q: 'Which country invented the first modern spy agency?', a: 'England', opts: ['USA', 'France', 'England', 'Russia'] },
+                { q: 'How many stars are on the CIA logo?', a: '16', opts: ['13', '16', '50', '12'] },
+                { q: 'What does MI6 stand for?', a: 'Military Intelligence, Section 6', opts: ['Military Intelligence, Section 6', 'Ministry of Intelligence 6', 'Maritime Intel 6', 'Multiple Intel Section 6'] },
+            ];
+            const m = missions[Math.floor(Math.random() * missions.length)];
+            const shuffled = [...m.opts].sort(() => Math.random() - 0.5);
+
+            content.innerHTML = `
+                <div style="font-size:9px;color:#f87171;margin-bottom:12px;text-align:center;letter-spacing:1px;text-transform:uppercase;">Daily Intelligence Quiz</div>
+                <div style="background:#1a0808;border:1px solid #7f1d1d;border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:#fca5a5;font-weight:bold;text-align:center;">${m.q}</div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    ${shuffled.map(opt => `
+                        <button onclick="dailyOpAnswer('${opt.replace(/'/g,"\\'")}','${m.a.replace(/'/g,"\\'")}','${lastDailyKey}','${today}')" style="background:#1a0808;border:2px solid #7f1d1d;border-radius:8px;padding:10px;font-size:10px;color:#fca5a5;cursor:pointer;transition:all 0.15s;text-align:left;" onmouseover="this.style.borderColor='#dc2626'" onmouseout="this.style.borderColor='#7f1d1d'">${opt}</button>
+                    `).join('')}
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        window.dailyOpAnswer = function(chosen, correct, key, today) {
+            const content = document.getElementById('intel-daily-content');
+            if(chosen === correct) {
+                localStorage.setItem(key, today);
+                meta.intelPoints = (meta.intelPoints || 0) + 2;
+                localStorage.setItem('wt_intel', meta.intelPoints);
+                updateResShopTabBadge();
+                // Update button label
+                const statusEl = document.getElementById('intel-daily-status');
+                if(statusEl) statusEl.textContent = '✅ Done today';
+                content.innerHTML = `
+                    <div style="text-align:center;padding:16px 0;">
+                        <div style="font-size:48px;margin-bottom:10px;">✅</div>
+                        <div style="font-family:'Black Ops One',cursive;font-size:14px;color:#4ade80;margin-bottom:6px;">FIELD MISSION COMPLETE</div>
+                        <div style="font-size:26px;font-weight:900;color:#93c5fd;font-family:'Black Ops One',cursive;">+2 🔭</div>
+                        <div style="font-size:8px;color:#166534;margin-top:4px;">Intel Points earned! Return tomorrow for more.</div>
+                        <button onclick="document.getElementById('intel-daily-modal').style.display='none';renderResearchShopPanel();" style="margin-top:14px;background:linear-gradient(135deg,#052e16,#0a3d1e);border:1px solid #16a34a;color:#4ade80;border-radius:8px;padding:8px 24px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">CLAIM</button>
+                    </div>`;
+            } else {
+                content.innerHTML = `
+                    <div style="text-align:center;padding:16px 0;">
+                        <div style="font-size:48px;margin-bottom:10px;">❌</div>
+                        <div style="font-family:'Black Ops One',cursive;font-size:14px;color:#ef4444;margin-bottom:6px;">INCORRECT</div>
+                        <div style="font-size:9px;color:#7f1d1d;margin-bottom:8px;">Correct answer: <strong style="color:#fca5a5;">${correct}</strong></div>
+                        <div style="font-size:8px;color:#52525b;">No intel earned. Try the Spy Operation for intel instead!</div>
+                        <button onclick="document.getElementById('intel-daily-modal').style.display='none'" style="margin-top:14px;background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:8px;padding:8px 20px;font-family:'Black Ops One',cursive;font-size:11px;cursor:pointer;">CLOSE</button>
+                    </div>`;
+            }
+        };
+
+        // Update daily op button status on page load
+        (function updateDailyOpStatus() {
+            const lastDate = localStorage.getItem('wt_intel_daily');
+            const today = new Date().toDateString();
+            const el = document.getElementById('intel-daily-status');
+            if(el && lastDate === today) el.textContent = '✅ Done today';
+        })();
+
+        function updateTrenchButton() {
+            const btn = document.getElementById('trench-place-btn');
+            const equipped = (meta.resShop?.equipped || meta.resShopEquipped || []);
+            const trenchSlot = equipped.indexOf('trenches');
+            // Only show after the trench research bar has been completed this battle
+            const researchDone = trenchSlot >= 0 && state.resCompleted && state.resCompleted[trenchSlot];
+            if(btn) btn.style.display = researchDone ? '' : 'none';
+        }
+
+        function placeTrench() {
+            initResShop();
+            if(!state.active) return;
+            if(!(meta.resShop.equipped || []).includes('trenches')) { showNotification('⚠️ Trench Warfare not equipped!'); return; }
+            const tier = getResearchTier('trenches');
+            const tierData = RESEARCH_DEFS.find(r=>r.id==='trenches').tiers[Math.max(0,tier)];
+            const cost = tierData.trenchCost || 30;
+            if(state.econEnabled) {
+                if(state.econGold < cost) { showNotification(`❌ Need ${cost}g to dig a trench!`); return; }
+                state.econGold -= cost;
+            } else {
+                // No economy: cost 1 manpower instead
+                if(state.pMan < 1) { showNotification('❌ Not enough manpower to dig a trench!'); return; }
+                state.pMan -= 1;
+            }
+            const tx = 20 + Math.random() * 60;
+            const ty = 72 + Math.random() * 12;
+            const board = document.getElementById('game-board');
+            const el = document.createElement('div');
+            el.className = 'trench-obj';
+            el.style.left = tx + '%'; el.style.top = ty + '%';
+            el.textContent = '🪖';
+            board.appendChild(el);
+            state._trenchList.push({ x: tx, y: ty, el });
+            const reduct = Math.round((tierData.dmgReduct || 0.35) * 100);
+            const costStr = state.econEnabled ? `${cost}g` : `1 manpower`;
+            showNotification(`🪖 Trench dug! (-${costStr}) Nearby units take ${reduct}% less damage.`);
+        }
+
         function finalizeGame(res) {
             state.active = false;
             cleanupGameModes();
@@ -11464,6 +12568,9 @@ const FLAG_DATA = {            sau: null,
             state.currentMap = 'arena';
             // Clean up all XP badges
             document.querySelectorAll('[id^="xpbadge-"]').forEach(b => b.remove());
+            // Clean up trenches
+            document.querySelectorAll('.trench-obj').forEach(t => t.remove());
+            if(state._trenchList) state._trenchList = [];
             // End tutorial if running
             if(tutActive) tutEnd();
             // Clean up commander button
@@ -11506,6 +12613,11 @@ const FLAG_DATA = {            sau: null,
             if(res === 'VICTORY') {
                 meta.streak++;
                 addXP(xpGain);
+                // Award 1 base intel per victory, +1 bonus for long streaks
+                const intelBonus = 1 + (meta.streak >= 5 ? 1 : 0);
+                meta.intelPoints = (meta.intelPoints || 0) + intelBonus;
+                localStorage.setItem('wt_intel', meta.intelPoints);
+                if(typeof updateResShopTabBadge === 'function') updateResShopTabBadge();
                 
                 // Check achievements
                 unlockAchievement('first_win');
@@ -13836,7 +14948,7 @@ const FLAG_DATA = {            sau: null,
             const p = player===1?mp.p1:mp.p2;
             if(p.man<card.c||cardEl.classList.contains('disabled')) return;
             e.preventDefault();
-            mp.drag['p'+player]={card,cardEl,active:true};
+            mp.drag['p'+player]={card,cardEl,active:true,player};
             cardEl.classList.add('dragging');
             const t=e.touches[0]; createMPGhost(card.i); moveMPGhost(t.clientX,t.clientY);
         }
@@ -13845,7 +14957,7 @@ const FLAG_DATA = {            sau: null,
             const p = player===1?mp.p1:mp.p2;
             if(p.man<card.c||cardEl.classList.contains('disabled')) return;
             e.preventDefault();
-            mp.drag['p'+player]={card,cardEl,active:true};
+            mp.drag['p'+player]={card,cardEl,active:true,player};
             cardEl.classList.add('dragging');
             createMPGhost(card.i); moveMPGhost(e.clientX,e.clientY);
         }
@@ -13857,22 +14969,25 @@ const FLAG_DATA = {            sau: null,
                 const bfEl = document.getElementById('mp-battlefield');
                 if(!bfEl) return;
                 const br = bfEl.getBoundingClientRect();
-                const screenH = window.innerHeight;
                 let player, drag;
                 if(mp.lanMode) {
                     // In LAN mode, only control your own player
                     player = lan.myPlayer;
                     drag = mp.drag['p'+player];
                 } else {
-                    player = cy > screenH/2 ? 1 : 2;
-                    drag = mp.drag['p'+player];
-                    if(!drag?.active) { player=player===1?2:1; drag=mp.drag['p'+player]; }
+                    // Use the player stored in the drag object (set on mousedown/touchstart)
+                    // so rotated P2 HUD cards work correctly
+                    if(mp.drag.p1?.active) { player=1; drag=mp.drag.p1; }
+                    else if(mp.drag.p2?.active) { player=2; drag=mp.drag.p2; }
                 }
                 if(!drag?.active) return;
                 drag.cardEl.classList.remove('dragging');
                 removeMPGhost();
                 if(cx>=br.left&&cx<=br.right&&cy>=br.top&&cy<=br.bottom) {
-                    mpPlayCard(player,drag.card,((cx-br.left)/br.width)*100,((cy-br.top)/br.height)*100);
+                    // For P2 (rotated HUD at top), the battlefield Y% is normal (0=top=P2 side)
+                    const bx = ((cx-br.left)/br.width)*100;
+                    const by = ((cy-br.top)/br.height)*100;
+                    mpPlayCard(player,drag.card,bx,by);
                 }
                 mp.drag['p'+player]=null;
             };
@@ -15123,6 +16238,8 @@ const FLAG_DATA = {            sau: null,
                     shown.add(id);
                 }
             });
+            // Show trench button if equipped
+            updateTrenchButton();
         }
 
         // ── DECK BUILDER FORMATION INFO + BUILDING SELECTION ──
@@ -17463,6 +18580,8 @@ const FLAG_DATA = {            sau: null,
             updateAccountUI();
             const btn = document.getElementById('account-btn');
             if (btn) btn.style.display = 'block';
+            // Init research shop HUD
+            setTimeout(() => { if(typeof updateResShopHUDBtn === 'function') updateResShopHUDBtn(); }, 100);
         })();
     </script>
 
@@ -17701,35 +18820,59 @@ const FLAG_DATA = {            sau: null,
 
     <!-- ══════════════════════════════════════════════
          LOCAL 2P — P2 HUD OVERLAY (sits above solo game)
+         Full feature parity: research, morale, formations, peace
          ══════════════════════════════════════════════ -->
     <div id="local2p-overlay" style="display:none;position:fixed;inset:0;z-index:55;pointer-events:none;">
-        <!-- P2 top HUD (flipped) -->
-        <div id="local2p-p2-hud" style="position:absolute;top:0;left:0;right:0;background:linear-gradient(180deg,#0d0d0d,#111);border-bottom:2px solid #ef4444;padding:4px 8px;pointer-events:all;transform-origin:top center;">
-            <!-- P2 name + manpower -->
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-                <span class="army-font" style="color:#ef4444;font-size:11px;" id="local2p-p2-name">PLAYER 2</span>
-                <span style="color:#52525b;font-size:10px;" id="local2p-p2-man-text">5/10 ⚡</span>
-            </div>
-            <div style="height:10px;background:#111;border-radius:5px;overflow:hidden;border:1px solid #333;position:relative;margin-bottom:3px;">
-                <div id="local2p-p2-man-fill" style="height:100%;width:50%;background:linear-gradient(90deg,#b45309,#f59e0b);transition:width 0.1s;"></div>
-            </div>
-            <!-- P2 morale bar (hidden until 60s) -->
-            <div id="local2p-p2-morale-wrap" style="display:none;margin-bottom:3px;">
-                <div style="height:4px;background:#111;border-radius:2px;overflow:hidden;border:1px solid #333;">
-                    <div id="local2p-p2-morale-fill" style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#4ade80);transition:width 0.5s;"></div>
+        <!-- P2 top HUD — wrapper sits at top, inner content rotated 180° so P2 reads upside-down from top edge -->
+        <div id="local2p-p2-hud" style="position:absolute;top:0;left:0;right:0;pointer-events:all;">
+            <!-- Inner container: rotated so P2 (sitting across) can read it normally -->
+            <div style="background:linear-gradient(180deg,#1a0505 0%,#0d0d0d 100%);border-bottom:2px solid #ef4444;padding:4px 8px;transform:rotate(180deg);transform-origin:center center;">
+
+                <!-- P2 name + manpower text (appears at bottom of rotated block = top for P2) -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                    <span class="army-font" style="color:#ef4444;font-size:11px;" id="local2p-p2-name">PLAYER 2</span>
+                    <span style="color:#a1a1aa;font-size:9px;" id="local2p-p2-man-text">5/10 ⚡</span>
                 </div>
+
+                <!-- P2 manpower bar -->
+                <div style="height:10px;background:#111;border-radius:5px;overflow:hidden;border:1px solid #333;position:relative;margin-bottom:2px;">
+                    <div id="local2p-p2-man-fill" style="height:100%;width:50%;background:linear-gradient(90deg,#b45309,#f59e0b);transition:width 0.1s;"></div>
+                </div>
+
+                <!-- P2 morale bar (hidden until 60s) -->
+                <div id="local2p-p2-morale-wrap" style="display:none;margin-bottom:2px;">
+                    <div style="height:4px;background:#111;border-radius:2px;overflow:hidden;border:1px solid #333;">
+                        <div id="local2p-p2-morale-fill" style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#4ade80);transition:width 0.5s;"></div>
+                    </div>
+                </div>
+
+                <!-- P2 formations + peace -->
+                <div style="display:flex;gap:3px;margin-bottom:3px;flex-wrap:wrap;">
+                    <button id="local2p-form-assault"  onclick="local2pSetFormation('assault')"  style="background:#1e3a8a;border:1px solid #3b82f6;color:#93c5fd;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;cursor:pointer;">⚔️ ASLT</button>
+                    <button id="local2p-form-defend"   onclick="local2pSetFormation('defend')"   style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;cursor:pointer;">🛡️ DEF</button>
+                    <button id="local2p-form-flank-l"  onclick="local2pSetFormation('flank-l')"  style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;cursor:pointer;">↙ FLK-L</button>
+                    <button id="local2p-form-flank-r"  onclick="local2pSetFormation('flank-r')"  style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;cursor:pointer;">↘ FLK-R</button>
+                    <button id="local2p-form-suppress" onclick="local2pSetFormation('suppress')" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;cursor:pointer;">🎯 SUP</button>
+                    <button onclick="local2pOfferPeace()" style="background:linear-gradient(135deg,#0a1628,#0f2042);border:1px solid #1e3a6e;border-radius:4px;padding:2px 5px;font-size:7px;font-family:'Black Ops One',cursive;color:#64748b;cursor:pointer;margin-left:auto;">🕊️ PEACE</button>
+                </div>
+
+                <!-- P2 research buttons -->
+                <div style="display:flex;gap:3px;margin-bottom:3px;">
+                    <button id="local2p-res-btn-0" onclick="local2pStartResearch(0)" style="flex:1;background:#18181b;border:1px solid #3f3f46;border-radius:4px;padding:3px 2px;font-size:7px;font-weight:bold;color:#71717a;cursor:pointer;text-align:center;position:relative;overflow:hidden;font-family:'Roboto',sans-serif;">
+                        <div id="local2p-res-prog-0" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(245,158,11,0.2);transition:width 0.3s;"></div>⚡ MP
+                    </button>
+                    <button id="local2p-res-btn-1" onclick="local2pStartResearch(1)" style="flex:1;background:#18181b;border:1px solid #3f3f46;border-radius:4px;padding:3px 2px;font-size:7px;font-weight:bold;color:#71717a;cursor:pointer;text-align:center;position:relative;overflow:hidden;font-family:'Roboto',sans-serif;">
+                        <div id="local2p-res-prog-1" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(245,158,11,0.2);transition:width 0.3s;"></div>🛡 ARM
+                    </button>
+                    <button id="local2p-res-btn-2" onclick="local2pStartResearch(2)" style="flex:1;background:#18181b;border:1px solid #3f3f46;border-radius:4px;padding:3px 2px;font-size:7px;font-weight:bold;color:#71717a;cursor:pointer;text-align:center;position:relative;overflow:hidden;font-family:'Roboto',sans-serif;">
+                        <div id="local2p-res-prog-2" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(245,158,11,0.2);transition:width 0.3s;"></div>🔭 INTEL
+                    </button>
+                </div>
+
+                <!-- P2 card hand — at bottom of rotated block = closest to battlefield for P2 -->
+                <div id="local2p-p2-deck" style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:2px;"></div>
+
             </div>
-            <!-- P2 formations -->
-            <div style="display:flex;gap:3px;margin-bottom:3px;flex-wrap:wrap;">
-                <button class="local2p-form-btn selected" id="local2p-form-assault" onclick="local2pSetFormation('assault')" style="background:#1e3a8a;border:1px solid #3b82f6;color:#93c5fd;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;cursor:pointer;">⚔️ ASLT</button>
-                <button class="local2p-form-btn" id="local2p-form-defend" onclick="local2pSetFormation('defend')" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;cursor:pointer;">🛡️ DEF</button>
-                <button class="local2p-form-btn" id="local2p-form-flank-l" onclick="local2pSetFormation('flank-l')" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;cursor:pointer;">↙ FLK-L</button>
-                <button class="local2p-form-btn" id="local2p-form-flank-r" onclick="local2pSetFormation('flank-r')" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;cursor:pointer;">↘ FLK-R</button>
-                <button class="local2p-form-btn" id="local2p-form-suppress" onclick="local2pSetFormation('suppress')" style="background:#18181b;border:1px solid #3f3f46;color:#71717a;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;cursor:pointer;">🎯 SUP</button>
-                <button onclick="local2pOfferPeace()" style="background:linear-gradient(135deg,#0a1628,#0f2042);border:1px solid #1e3a6e;border-radius:4px;padding:2px 6px;font-size:8px;font-family:'Black Ops One',cursive;color:#64748b;cursor:pointer;margin-left:4px;">🕊️ PEACE</button>
-            </div>
-            <!-- P2 card hand (flipped) -->
-            <div id="local2p-p2-deck" style="display:flex;gap:4px;transform:rotate(180deg);transform-origin:center;justify-content:center;flex-wrap:wrap;"></div>
         </div>
 
         <!-- Peace treaty modal for 2P -->
@@ -17768,7 +18911,7 @@ const FLAG_DATA = {            sau: null,
 
     <script>
     // ══════════════════════════════════════════════════════════════════
-    // LOCAL 2P SYSTEM — uses the solo engine, P2 replaces AI
+    // LOCAL 2P SYSTEM — full feature parity with solo engine
     // ══════════════════════════════════════════════════════════════════
 
     const local2p = {
@@ -17776,16 +18919,25 @@ const FLAG_DATA = {            sau: null,
         p1Nat: null,
         p2Nat: null,
         pickPhase: 1,      // 1 = P1 picking, 2 = P2 picking
-        p2Man: 5,          // P2 manpower (0-10)
+        p2Man: 5,          // P2 manpower
+        p2MaxMan: 10,
         p2Formation: 'assault',
         p2Morale: 100,
-        moraleElapsed: 0,
-        p2Cards: [],       // deep copy of p2Nat cards
-        p2NextSpawn: 0,    // auto-spawn timer disabled — P2 plays manually
-        peacePending: null, // which player offered peace
+        p2MoraleElapsed: 0,
+        p2MoraleLastNotif: 100,
+        p2Cards: [],       // P2's full card pool (includes crafted cards, nation upgrades)
+        p2Researching: null, // which research is active (0/1/2)
+        p2ResProgress: [0,0,0],
+        p2ResCompleted: [false,false,false],
+        p2EconGold: 80,
+        p2EconEnabled: false,
+        p2EconRate: 0,
+        p2EconElapsed: 0,
+        peacePending: null,
         p2DragCard: null,
         p2DragEl: null,
         p2UnitCount: 0,
+        _tickInterval: null,
     };
 
     // ── NATION SELECT ──────────────────────────────────────────────────
@@ -17798,7 +18950,9 @@ const FLAG_DATA = {            sau: null,
         const selDisplay = document.getElementById('local2p-selected-display');
 
         const isP1Turn = local2p.pickPhase === 1;
+        const playerColor = isP1Turn ? '#3b82f6' : '#ef4444';
         label.textContent = isP1Turn ? 'PLAYER 1 — CHOOSE YOUR NATION' : 'PLAYER 2 — CHOOSE YOUR NATION';
+        label.style.color = playerColor;
 
         p1Badge.style.background = isP1Turn ? 'linear-gradient(135deg,#1e3a8a,#1d4ed8)' : '#0a1628';
         p1Badge.style.borderColor = isP1Turn ? '#3b82f6' : '#1e3a5f';
@@ -17825,18 +18979,29 @@ const FLAG_DATA = {            sau: null,
                 if (n.id === 'ott' && !meta.unlockedOttoman) return false;
                 if (n.id === 'vat' && !meta.unlockedVatican) return false;
                 if (n.id === 'nap' && !meta.unlockedNapoleon) return false;
+                // Handle all the other secret unlock flags
+                if (n.id === 'horde' && !meta.unlockedGoldenHorde) return false;
+                if (n.id === 'rome' && !meta.unlockedRome) return false;
+                if (n.id === 'vik2' && !meta.unlockedVikingAge) return false;
+                if (n.id === 'per' && !meta.unlockedPersia) return false;
+                if (n.id === 'cw' && !meta.unlockedColdWar) return false;
+                if (n.id === 'zul' && !meta.unlockedShakaZulu) return false;
+                if (n.id === 'imm' && !meta.unlockedImmortal) return false;
+                if (n.id === 'che' && !meta.unlockedChechnya) return false;
+                if (n.id === 'osa' && !meta.unlockedSamurai) return false;
             }
             return n.minLvl <= meta.lvl || n.isSecret;
         });
 
         visibleNations.forEach(n => {
+            const nU = meta.natUpg[n.id] || {hp:0, atk:0};
+            const hasUpg = nU.hp > 0 || nU.atk > 0;
             const btn = document.createElement('div');
-            btn.style.cssText = `background:linear-gradient(135deg,#18181b,#27272a);border:2px solid #3f3f46;border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;`;
-            btn.innerHTML = `<span style="font-family:'Black Ops One',cursive;font-size:11px;background:#1e3a8a;color:white;padding:3px 6px;border-radius:5px;">${n.icon}</span><span style="font-family:'Black Ops One',cursive;font-size:11px;color:#d4d4d8;">${n.name}</span>`;
+            btn.style.cssText = `background:linear-gradient(135deg,#18181b,#27272a);border:2px solid #3f3f46;border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;position:relative;`;
+            btn.innerHTML = `<span style="font-family:'Black Ops One',cursive;font-size:11px;background:#1e3a8a;color:white;padding:3px 6px;border-radius:5px;">${n.icon}</span><span style="font-family:'Black Ops One',cursive;font-size:11px;color:#d4d4d8;">${n.name}</span>${hasUpg?`<span style="font-size:8px;color:#f59e0b;margin-left:auto;">⬆️</span>`:''}`;
             btn.dataset.natId = n.id;
 
             btn.onclick = () => {
-                // Deselect all
                 grid.querySelectorAll('div').forEach(b => {
                     b.style.borderColor = '#3f3f46';
                     b.style.background = 'linear-gradient(135deg,#18181b,#27272a)';
@@ -17845,7 +19010,6 @@ const FLAG_DATA = {            sau: null,
                 btn.style.background = isP1Turn ? 'linear-gradient(135deg,#1e3a8a22,#1d4ed833)' : 'linear-gradient(135deg,#7f1d1d22,#991b1b33)';
                 tempSelected.id = n.id;
                 tempSelected.nat = n;
-
                 selDisplay.innerHTML = `<div style="font-family:'Black Ops One',cursive;font-size:13px;color:${isP1Turn?'#3b82f6':'#ef4444'};">${isP1Turn?'P1':'P2'}: ${n.name} selected</div>`;
                 confirmBtn.style.display = '';
             };
@@ -17868,7 +19032,6 @@ const FLAG_DATA = {            sau: null,
             renderLocal2PNationSelect();
         } else {
             local2p.p2Nat = sel.nat;
-            // Both picked — start game
             document.getElementById('local2p-nation-screen').style.display = 'none';
             local2pStartGame();
         }
@@ -17885,56 +19048,84 @@ const FLAG_DATA = {            sau: null,
         }
     }
 
+    // ── P2 CARD BUILDER — mirrors solo getCraftedCardsForBattle + natUpg ──
+    function local2pBuildP2Cards() {
+        const n = local2p.p2Nat;
+        // Start from a deep copy of the nation's base cards
+        const cards = JSON.parse(JSON.stringify(n.cards));
+        // Apply nation upgrades (same formula as solo startGame)
+        const nU = meta.natUpg[n.id] || {hp:0, atk:0};
+        cards.forEach(c => {
+            c.hp *= (1 + nU.hp * 0.1);
+            c.d  *= (1 + nU.atk * 0.1);
+        });
+        // Inject crafted cards (P2 gets same crafted cards as P1 — fair play)
+        if (typeof getCraftedCardsForBattle === 'function') {
+            const extras = getCraftedCardsForBattle();
+            extras.forEach(c => cards.push(JSON.parse(JSON.stringify(c))));
+        }
+        return cards;
+    }
+
     // ── GAME START ─────────────────────────────────────────────────────
     function local2pStartGame() {
-        // Deep-copy nation cards for P2
-        local2p.p2Cards = local2p.p2Nat.cards.map(c => ({ ...c }));
-        local2p.p2Man = 5;
-        local2p.p2Formation = 'assault';
+        // Build P2's full card pool with upgrades + crafted cards
+        local2p.p2Cards = local2pBuildP2Cards();
+        local2p.p2Man = 5 + (meta.upgrades.startMP || 0); // same starting MP as P1
+        local2p.p2MaxMan = 10;
+        local2p.p2Formation = meta.equippedFormation || 'assault';
         local2p.p2Morale = 100;
-        local2p.moraleElapsed = 0;
+        local2p.p2MoraleElapsed = 0;
+        local2p.p2MoraleLastNotif = 100;
+        local2p.p2Researching = null;
+        local2p.p2ResProgress = [0,0,0];
+        local2p.p2ResCompleted = [false,false,false];
+        local2p.p2EconGold = 80;
+        local2p.p2EconEnabled = meta.lvl >= 5;
+        local2p.p2EconRate = 0;
+        local2p.p2EconElapsed = 0;
         local2p.p2UnitCount = 0;
         local2p.active = true;
         local2p.peacePending = null;
-
-        // Use the solo engine: P1 = player, enemy = P2 nation
-        // We hijack the AI with our own P2 input system
         local2p._aiOverride = true;
 
-        // Start solo game with P1's nation, enemy = P2's nation
-        // Set state so enemy uses P2's nation
-        const p1Nation = local2p.p1Nat;
-        const p2Nation = local2p.p2Nat;
+        // Start solo game with P1's nation as player, P2's nation as "enemy"
+        startGame(local2p.p1Nat);
 
-        // Start the normal game
-        startGame(p1Nation, p2Nation);
+        // Override enemy nation to P2's nation right after
+        setTimeout(() => {
+            if (typeof state !== 'undefined') {
+                state._local2pMode = true;
+                state.aiNextAction = Infinity; // freeze AI — P2 plays manually
+                // Set the enemy nation to P2's for display/HQ purposes
+                state.eNat = JSON.parse(JSON.stringify(local2p.p2Nat));
+                const eName = document.getElementById('e-name');
+                if (eName) eName.textContent = local2p.p2Nat.name + ' (P2)';
+            }
+        }, 150);
 
-        // Show the P2 overlay
         showLocal2POverlay();
-
-        // Hook into tick to manage P2 manpower
         local2p._tickInterval = setInterval(local2pTick, 100);
     }
 
     function showLocal2POverlay() {
         const overlay = document.getElementById('local2p-overlay');
         overlay.style.display = 'block';
-
-        // Update P2 name
         document.getElementById('local2p-p2-name').textContent = local2p.p2Nat.name.toUpperCase() + ' (P2)';
 
-        // Override AI: stop it from spawning by clamping eMan
-        // We do this by patching state after game starts
-        setTimeout(() => {
-            // Set AI to never auto-spawn (we control it)
-            if (typeof state !== 'undefined') {
-                state._local2pMode = true;
-                state.aiNextAction = Infinity; // freeze AI spawning
-                // Rename enemy HQ label
-                const eName = document.getElementById('e-name');
-                if (eName) eName.textContent = local2p.p2Nat.name + ' (P2)';
-            }
-        }, 200);
+        // Set up P2 research buttons
+        local2p.p2ResCompleted = [false,false,false];
+        local2p.p2ResProgress  = [0,0,0];
+        local2p.p2Researching  = null;
+        ['0','1','2'].forEach(i => {
+            const prog = document.getElementById('local2p-res-prog-'+i);
+            if (prog) prog.style.width = '0%';
+            const btn = document.getElementById('local2p-res-btn-'+i);
+            if (btn) { btn.style.opacity='1'; btn.style.borderColor='#3f3f46'; btn.style.color='#71717a'; }
+        });
+
+        // Set up P2 formation buttons
+        local2pSetFormation(local2p.p2Formation);
 
         renderLocal2PHandP2();
     }
@@ -17945,12 +19136,33 @@ const FLAG_DATA = {            sau: null,
         deck.innerHTML = '';
         local2p.p2Cards.forEach((card, i) => {
             const canAfford = local2p.p2Man >= card.c;
+            const isSelected = local2p.p2DragCard === card;
             const div = document.createElement('div');
-            div.style.cssText = `background:linear-gradient(135deg,#1c0505,#2a0a0a);border:2px solid ${canAfford?'#ef4444':'#3f3f46'};border-radius:8px;padding:6px 8px;min-width:60px;text-align:center;cursor:${canAfford?'grab':'not-allowed'};opacity:${canAfford?1:0.4};transition:all 0.2s;touch-action:none;user-select:none;`;
-            div.innerHTML = `<div style="font-size:20px;">${card.i}</div><div style="font-family:'Black Ops One',cursive;font-size:8px;color:#d4d4d8;margin-top:2px;">${card.n}</div><div style="font-size:9px;color:#f59e0b;">⚡${card.c}</div>`;
+            div.style.cssText = `background:linear-gradient(135deg,${isSelected?'#3b0000,#5a0000':'#1c0505,#2a0a0a'});border:2px solid ${isSelected?'#f87171':canAfford?'#ef4444':'#3f3f46'};border-radius:8px;padding:6px 8px;min-width:60px;text-align:center;cursor:${canAfford?'pointer':'not-allowed'};opacity:${canAfford?1:0.4};transition:all 0.2s;touch-action:manipulation;user-select:none;${isSelected?'box-shadow:0 0 12px rgba(239,68,68,0.6);transform:scale(1.05);':''}`;
+            div.innerHTML = `<div style="font-size:20px;">${card.i}</div><div style="font-family:'Black Ops One',cursive;font-size:8px;color:#d4d4d8;margin-top:2px;">${card.n}</div><div style="font-size:9px;color:#f59e0b;">⚡${card.c}</div>${isSelected?'<div style="font-size:7px;color:#f87171;margin-top:1px;">TAP FIELD ↓</div>':''}`;
             div.dataset.cardIdx = i;
 
-            // Drag to deploy (from the top area onto the battlefield)
+            // Tap to select (or deselect if already selected)
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!canAfford) return;
+                if (local2p.p2DragCard === card) {
+                    // Deselect
+                    local2p.p2DragCard = null;
+                    local2p.p2Dragging = false;
+                    document.getElementById('l2p-drag-ghost')?.remove();
+                } else {
+                    local2p.p2DragCard = card;
+                    local2p.p2DragCardIdx = i;
+                    local2p.p2Dragging = false; // tap mode, not drag mode
+                    // Show ghost at card position to confirm selection
+                    document.getElementById('l2p-drag-ghost')?.remove();
+                    showNotification('↓ Tap the battlefield to deploy ' + card.n + ' for P2!');
+                }
+                renderLocal2PHandP2();
+            });
+
+            // Also support drag-to-deploy (existing behaviour)
             div.addEventListener('pointerdown', (e) => {
                 if (!canAfford) return;
                 e.preventDefault();
@@ -17959,6 +19171,7 @@ const FLAG_DATA = {            sau: null,
                 local2p.p2Dragging = true;
 
                 // Create floating drag ghost
+                document.getElementById('l2p-drag-ghost')?.remove();
                 const ghost = document.createElement('div');
                 ghost.id = 'l2p-drag-ghost';
                 ghost.style.cssText = `position:fixed;z-index:999;pointer-events:none;font-size:28px;transform:translate(-50%,-50%);`;
@@ -17975,6 +19188,7 @@ const FLAG_DATA = {            sau: null,
                 local2p.p2DragCardIdx = i;
                 local2p.p2Dragging = true;
                 const touch = e.touches[0];
+                document.getElementById('l2p-drag-ghost')?.remove();
                 const ghost = document.createElement('div');
                 ghost.id = 'l2p-drag-ghost';
                 ghost.style.cssText = `position:fixed;z-index:999;pointer-events:none;font-size:28px;transform:translate(-50%,-50%);`;
@@ -18019,14 +19233,12 @@ const FLAG_DATA = {            sau: null,
         const card = local2p.p2DragCard;
         if (local2p.p2Man < card.c) { showNotification('⚡ Not enough manpower for P2!'); return; }
 
-        // Find the game board element and compute percentage coords
         const board = document.getElementById('game-board');
         if (!board) return;
         const rect = board.getBoundingClientRect();
 
-        // Check if dropped onto the battlefield
         if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
-            showNotification('↑ Drop P2 units onto the battlefield!');
+            showNotification('↓ Tap the battlefield to deploy ' + card.n + ' for P2!');
             return;
         }
 
@@ -18034,13 +19246,19 @@ const FLAG_DATA = {            sau: null,
         const yPct = ((clientY - rect.top) / rect.height) * 100;
 
         // P2 units deploy in the top 30% of the battlefield
-        const deployY = Math.max(5, Math.min(30, yPct));
+        const deployY = Math.max(3, Math.min(30, yPct));
 
         // Spend manpower
         local2p.p2Man -= card.c;
 
-        // Play card as enemy team using the solo engine's playCard
+        // Apply P2's armour research buff (mirrors solo: +25% HP if research[1] done)
         const unitCard = { ...card };
+        if (local2p.p2ResCompleted[1]) {
+            unitCard.hp = Math.round(unitCard.hp * 1.25);
+        }
+        // Apply P2's attack research buff (+20% damage if research[0] done — MP research passively buffs combat via faster regen; treat as minor dmg boost)
+        // (Research 0 = MP regen, 1 = Armour HP, 2 = Intel — same as solo)
+
         local2p.p2UnitCount++;
         playCard(unitCard, 'e', xPct, deployY);
 
@@ -18051,9 +19269,28 @@ const FLAG_DATA = {            sau: null,
         }
 
         local2p.p2DragCard = null;
+        local2p.p2Dragging = false;
+        document.getElementById('l2p-drag-ghost')?.remove();
         renderLocal2PHandP2();
         updateLocal2PHUD();
     }
+
+    // Battlefield tap-to-deploy for P2 (when card is selected via tap)
+    document.addEventListener('click', (e) => {
+        if (!local2p.active || !local2p.p2DragCard || local2p.p2Dragging) return;
+        // If click is inside the P2 HUD, don't deploy
+        const p2Hud = document.getElementById('local2p-p2-hud');
+        if (p2Hud && p2Hud.contains(e.target)) return;
+        local2pTryDeploy(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchend', (e) => {
+        // Tap-to-deploy when in tap-select mode (not dragging)
+        if (!local2p.active || !local2p.p2DragCard || local2p.p2Dragging) return;
+        const p2Hud = document.getElementById('local2p-p2-hud');
+        if (p2Hud && p2Hud.contains(e.target)) return;
+        const touch = e.changedTouches[0];
+        local2pTryDeploy(touch.clientX, touch.clientY);
+    }, { capture: false });
 
     // ── TICK ───────────────────────────────────────────────────────────
     function local2pTick() {
@@ -18062,15 +19299,51 @@ const FLAG_DATA = {            sau: null,
 
         const dt = 0.1; // 100ms tick
 
-        // Freeze AI spawning every tick
+        // Always freeze AI spawning
         if (state._local2pMode) state.aiNextAction = Infinity;
 
-        // P2 manpower regen
-        const regenRate = 0.5;
-        local2p.p2Man = Math.min(10, local2p.p2Man + regenRate * dt * 10);
+        // ── P2 MORALE (mirrors solo morale system) ──
+        local2p.p2MoraleElapsed += dt;
+        local2p.p2Morale = Math.max(20, 100 - Math.floor(local2p.p2MoraleElapsed / 60) * 8);
+        const p2MoraleMult = local2p.p2Morale / 100;
+        if (local2p.p2Morale < local2p.p2MoraleLastNotif - 7) {
+            local2p.p2MoraleLastNotif = local2p.p2Morale;
+            if (local2p.p2Morale <= 75 && local2p.p2Morale > 20) showNotification(`😰 P2 MORALE ${local2p.p2Morale}% — P2 troops tire...`);
+            if (local2p.p2Morale === 20) showNotification('💀 P2 MORALE CRITICAL! P2 severely slowed!');
+        }
 
-        // Morale (mirrors solo system)
-        local2p.moraleElapsed += dt;
+        // ── P2 MANPOWER REGEN (matches solo formula including research + morale) ──
+        const p2BaseRegen = (local2p.p2ResCompleted[0] ? 0.8 : 0.5) * p2MoraleMult;
+        local2p.p2Man = Math.min(local2p.p2MaxMan, local2p.p2Man + p2BaseRegen * dt);
+
+        // ── P2 RESEARCH (mirrors solo research tick) ──
+        if (local2p.p2Researching !== null) {
+            local2p.p2ResProgress[local2p.p2Researching] += dt * 15;
+            const prog = document.getElementById('local2p-res-prog-' + local2p.p2Researching);
+            if (prog) prog.style.width = Math.min(100, local2p.p2ResProgress[local2p.p2Researching] / 1.5) + '%';
+            if (local2p.p2ResProgress[local2p.p2Researching] >= 150) {
+                const done = local2p.p2Researching;
+                local2p.p2ResCompleted[done] = true;
+                local2p.p2Researching = null;
+                const names = ['⚡ MANPOWER', '🛡️ ARMOUR', '🔭 INTEL'];
+                showNotification('P2 ' + names[done] + ' RESEARCH COMPLETE!');
+                // Intel research: jam P1's manpower for 10s
+                if (done === 2) {
+                    state.intelActive = true;
+                    state.intelTimer = 10;
+                    showNotification('🔭 P2 Intel: P1 manpower jammed for 10s!');
+                }
+                const btn = document.getElementById('local2p-res-btn-' + done);
+                if (btn) { btn.style.opacity='0.5'; btn.style.borderColor='#22c55e'; btn.style.color='#4ade80'; }
+            }
+        }
+
+        // ── P2 ECONOMY ──
+        if (local2p.p2EconEnabled) {
+            local2p.p2EconElapsed += dt;
+            // Basic gold trickle (P2 doesn't place buildings — simplified economy)
+            local2p.p2EconGold = Math.min(999, local2p.p2EconGold + 2 * dt); // 2g/s base
+        }
 
         updateLocal2PHUD();
         renderLocal2PHandP2();
@@ -18079,10 +19352,11 @@ const FLAG_DATA = {            sau: null,
     function updateLocal2PHUD() {
         const manFill = document.getElementById('local2p-p2-man-fill');
         const manText = document.getElementById('local2p-p2-man-text');
-        if (manFill) manFill.style.width = (local2p.p2Man / 10 * 100) + '%';
-        if (manText) manText.textContent = Math.floor(local2p.p2Man) + '/10 ⚡';
+        if (manFill) manFill.style.width = (local2p.p2Man / local2p.p2MaxMan * 100) + '%';
+        if (manText) manText.textContent = Math.floor(local2p.p2Man) + '/' + local2p.p2MaxMan + ' ⚡';
 
-        if (local2p.moraleElapsed > 60) {
+        // Morale bar (show after first minute)
+        if (local2p.p2MoraleElapsed > 60) {
             const mWrap = document.getElementById('local2p-p2-morale-wrap');
             const mFill = document.getElementById('local2p-p2-morale-fill');
             if (mWrap) mWrap.style.display = 'block';
@@ -18094,10 +19368,28 @@ const FLAG_DATA = {            sau: null,
         }
     }
 
-    // ── FORMATIONS ─────────────────────────────────────────────────────
+    // ── RESEARCH (P2) ──────────────────────────────────────────────────
+    function local2pStartResearch(id) {
+        if (local2p.p2ResCompleted[id]) return;
+        if (local2p.p2Researching === id) return; // already running
+        local2p.p2Researching = id;
+        // Visually mark active
+        ['0','1','2'].forEach(i => {
+            const btn = document.getElementById('local2p-res-btn-' + i);
+            if (!btn) return;
+            if (i == id) {
+                btn.style.borderColor = '#f59e0b';
+                btn.style.color = '#f59e0b';
+            } else if (!local2p.p2ResCompleted[i]) {
+                btn.style.borderColor = '#3f3f46';
+                btn.style.color = '#71717a';
+            }
+        });
+    }
+
+    // ── FORMATIONS (P2) ────────────────────────────────────────────────
     function local2pSetFormation(f) {
         local2p.p2Formation = f;
-        // Update button styles
         ['assault','defend','flank-l','flank-r','suppress'].forEach(id => {
             const btn = document.getElementById('local2p-form-' + id);
             if (!btn) return;
@@ -18106,7 +19398,6 @@ const FLAG_DATA = {            sau: null,
             btn.style.borderColor = active ? '#3b82f6' : '#3f3f46';
             btn.style.color = active ? '#93c5fd' : '#71717a';
         });
-        // Apply formation to all existing P2 (enemy) units
         if (typeof state !== 'undefined') {
             state.entities.forEach(ent => {
                 if (ent.team === 'e' && ent.type === 'unit') ent.formation = f;
