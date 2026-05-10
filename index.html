@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+a<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <title>WARTIME: Sovereign Dominion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+    <script src="https://api.gamepix.com/v2/sdk.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700&display=swap');
         
@@ -21,7 +21,7 @@
             height: 45vh;
             width: 100%;
             border: 4px solid #333;
-            overflow: hidden;
+            overflow: hidden
         }
 
         #deployment-zone {
@@ -1053,8 +1053,71 @@
             .floating-dmg { font-size: 12px !important; }
         }
 
-        /* Extra small phones */
-        @media (max-width: 360px) {
+        /* ── DESKTOP / IFRAME (≥640px wide) ── */
+        /* For GamePix 800×450 and similar iframe embeds */
+        @media (min-width: 641px) {
+            body {
+                overflow: hidden !important;
+                padding: 0 !important;
+                height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+            }
+
+            /* Start screen — centered scrollable column */
+            #start-screen {
+                padding: 10px 12px !important;
+                justify-content: flex-start !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+
+            /* Game board fills more horizontal space on desktop */
+            #game-board {
+                max-width: 720px !important;
+                width: 96vw !important;
+            }
+            .w-full.max-w-md {
+                max-width: 720px !important;
+            }
+            .w-full.max-w-md.flex.justify-between {
+                max-width: 720px !important;
+            }
+
+            /* Battlefield taller on desktop */
+            .battlefield {
+                height: 48vh !important;
+                max-height: 340px !important;
+            }
+
+            /* Cards bigger and more readable */
+            .card .text-2xl { font-size: 24px !important; }
+            #deck { gap: 8px !important; padding: 0 8px !important; }
+
+            /* Research buttons */
+            .res-btn { padding: 14px 10px !important; }
+            .res-icon { font-size: 20px !important; }
+            .res-label { font-size: 10px !important; }
+
+            /* Formation bar */
+            .form-btn { padding: 6px 4px !important; font-size: 9px !important; }
+            .form-btn .form-icon { font-size: 16px !important; }
+        }
+
+        /* ── TUTORIAL: desktop readable ── */
+        @media (min-width: 641px) {
+            #tutorial-box {
+                max-width: 560px !important;
+                padding: 20px 24px 18px !important;
+            }
+            .tut-title { font-size: 20px !important; }
+            .tut-desc { font-size: 14px !important; line-height: 1.7 !important; }
+            .tut-step-label { font-size: 11px !important; }
+            #tut-next-btn { font-size: 13px !important; padding: 9px 22px !important; }
+            #tut-skip-btn { font-size: 12px !important; padding: 9px 16px !important; }
+        }
             .battlefield { height: 32vh !important; }
             #start-screen h1 { font-size: 26px !important; }
             .tab-btn { padding: 4px 4px !important; font-size: 7px !important; }
@@ -1685,6 +1748,8 @@
             z-index: 402;
             display: none;
             box-shadow: 0 -8px 40px rgba(59,130,246,0.3);
+            /* Push content above the deck — critical for deploy step readability */
+            box-sizing: border-box;
         }
         #tutorial-box.show { display: block; }
         .tut-step-label { font-size: 9px; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
@@ -2411,7 +2476,7 @@
         .friend-code-label { font-size: 9px; color: #52525b; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-2 select-none">
+<body class="flex flex-col items-center select-none" style="min-height:100vh;height:100%;overflow:hidden;padding:0;margin:0;justify-content:center;">
 
 
     <div id="econ-unlock-banner">💰 ECONOMY UNLOCKED — Place buildings fast! +12g/s baseline + supply drops!</div>
@@ -2477,7 +2542,7 @@
     <div id="horde-score-display">🌊 Wave <span id="horde-wave">1</span> · <span id="horde-score">0</span>pts</div>
     <div id="mirror-banner">🪞 MIRROR MATCH — <span id="mirror-nation-name">?</span></div>
 
-    <div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center p-4" style="overflow-y:auto;overflow-x:hidden;justify-content:flex-start;padding-top:max(16px,3vh);">
+    <div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center" style="overflow-y:auto;overflow-x:hidden;justify-content:flex-start;padding:max(12px,2vh) max(12px,2vw);">
         <!-- Animated background -->
         <div id="menu-bg-canvas" aria-hidden="true"></div>
         
@@ -3173,13 +3238,13 @@
         </div>
     </div>
 
-    <div class="w-full max-w-md flex justify-between items-end mb-1 px-2">
+    <div class="w-full flex justify-between items-end mb-1 px-2" id="game-hud-names" style="max-width:min(720px,96vw)">
         <div id="p-name" class="army-font text-blue-500 text-sm">PLAYER</div>
         <div id="combo-display" class="hidden text-yellow-500 font-bold text-xs animate-pulse">COMBO: <span id="combo-count">0</span>x</div>
         <div id="event-timer" class="hidden text-red-500 font-bold text-[10px] animate-pulse">EVENT: <span id="event-msg">---</span></div>
         <div id="e-name" class="army-font text-red-500 text-sm">ENEMY</div>
     </div>
-    <div id="game-board" class="battlefield max-w-md rounded-xl relative">
+    <div id="game-board" class="battlefield rounded-xl relative" style="width:min(720px,96vw);max-width:min(720px,96vw);">
         <!-- Map HUD indicator -->
         <div id="map-indicator"></div>
         <!-- Weather overlay particles -->
@@ -3213,7 +3278,7 @@
         </button>
     </div>
 
-    <div class="w-full max-w-md mt-2 px-2">
+    <div class="w-full mt-2 px-2" style="max-width:min(720px,96vw)">
         <div class="manpower-bar mb-2">
             <div id="man-fill" class="manpower-fill"></div>
             <div class="manpower-text" id="man-text">5/10</div>
@@ -3325,7 +3390,7 @@
         <!-- Research Shop button removed — use the 🔬 Research tab in the main menu -->
     </div>
 
-    <div id="deck" class="w-full max-w-md mt-2 grid grid-cols-4 gap-2 px-2"></div>
+    <div id="deck" class="w-full mt-2 grid grid-cols-4 gap-2 px-2" style="max-width:min(720px,96vw)"></div>
 
     <script>
 const FLAG_DATA = {            sau: null,
@@ -16389,6 +16454,25 @@ const FLAG_DATA = {            sau: null,
             else if(step.action === 'deploy' || step.action === 'research') nextBtn.textContent = 'SKIP STEP →';
             else nextBtn.textContent = 'GOT IT →';
 
+            // On the deploy step, move the tutorial box to the TOP on desktop
+            // so it doesn't obscure the card deck at the bottom
+            const isDesktop = window.innerWidth >= 641;
+            if(step.action === 'deploy' && isDesktop) {
+                box.style.bottom = 'auto';
+                box.style.top = '0';
+                box.style.borderRadius = '0 0 16px 16px';
+                box.style.border = '2px solid #3b82f6';
+                box.style.borderTop = 'none';
+                box.style.boxShadow = '0 8px 40px rgba(59,130,246,0.3)';
+            } else {
+                box.style.bottom = '0';
+                box.style.top = 'auto';
+                box.style.borderRadius = '16px 16px 0 0';
+                box.style.border = '2px solid #3b82f6';
+                box.style.borderBottom = 'none';
+                box.style.boxShadow = '0 -8px 40px rgba(59,130,246,0.3)';
+            }
+
             // Highlight
             document.querySelectorAll('.tut-highlight').forEach(el => el.classList.remove('tut-highlight'));
             if(step.highlight) {
@@ -16397,9 +16481,6 @@ const FLAG_DATA = {            sau: null,
             }
 
             // Arrow — points AT the target element
-            // Tutorial box is pinned to the bottom, so most targets (deck, formation-bar,
-            // res buttons, commander) are in the lower half. We place the arrow just above
-            // the target and show 👇 so it clearly points down at the element.
             const arrow = document.getElementById('tut-arrow');
             if(step.arrowTarget) {
                 const el = document.getElementById(step.arrowTarget);
@@ -16407,17 +16488,18 @@ const FLAG_DATA = {            sau: null,
                     const rect = el.getBoundingClientRect();
                     const midScreen = window.innerHeight / 2;
                     let arrowTop, arrowEmoji;
-                    if(rect.top > midScreen) {
-                        // Target is in the bottom half — sit arrow just above it, point down
+                    // On deploy step (desktop, box at top), arrow should point DOWN at deck
+                    if(step.action === 'deploy' && isDesktop) {
+                        arrowTop = rect.top - 44;
+                        arrowEmoji = '👇';
+                    } else if(rect.top > midScreen) {
                         arrowTop = rect.top - 44;
                         arrowEmoji = '👇';
                     } else {
-                        // Target is in the top half — sit arrow just below it, point up
                         arrowTop = rect.bottom + 8;
                         arrowEmoji = '👆';
                     }
-                    // Clamp vertically so it doesn't overlap the tutorial box
-                    const tutBoxH = 170;
+                    const tutBoxH = 180;
                     arrowTop = Math.max(8, Math.min(arrowTop, window.innerHeight - tutBoxH - 48));
                     let arrowLeft = rect.left + rect.width / 2 - 16;
                     arrowLeft = Math.max(8, Math.min(arrowLeft, window.innerWidth - 40));
@@ -20261,32 +20343,34 @@ const FLAG_DATA = {            sau: null,
     })();
     </script>
 
-    <!-- ── CRAZYGAMES SDK + PAUSE SYSTEM ── -->
+    <!-- ── GAMEPIX SDK + PAUSE SYSTEM ── -->
     <script>
-    // ── CrazyGames SDK init ──
-    let _cgSDK = null;
-    (async () => {
+    // ── GamePix SDK init ──
+    let _gpSDK = null;
+    (function() {
         try {
-            _cgSDK = window.CrazyGames?.SDK || null;
-            if (_cgSDK) await _cgSDK.init();
-        } catch(e) { _cgSDK = null; }
+            if (window.gamepix) {
+                _gpSDK = window.gamepix;
+                if (typeof _gpSDK.start === 'function') _gpSDK.start();
+            }
+        } catch(e) { _gpSDK = null; }
     })();
 
-    // Show a CrazyGames interstitial ad (safe to call even if SDK isn't loaded)
+    // Show a GamePix interstitial ad (safe to call even if SDK isn't loaded)
     async function showCGAd() {
-        if (!_cgSDK) return;
+        if (!_gpSDK) return;
         try {
             if (typeof state !== 'undefined' && state.active) state.active = false;
-            await _cgSDK.ad.requestAd('interstitial');
+            if (typeof _gpSDK.showAd === 'function') await _gpSDK.showAd();
         } catch(e) {}
     }
 
     // Signal gameplay started/stopped
     function cgGameplayStart() {
-        try { if (_cgSDK) _cgSDK.game.gameplayStart(); } catch(e) {}
+        try { if (_gpSDK && typeof _gpSDK.gameplayStart === 'function') _gpSDK.gameplayStart(); } catch(e) {}
     }
     function cgGameplayStop() {
-        try { if (_cgSDK) _cgSDK.game.gameplayStop(); } catch(e) {}
+        try { if (_gpSDK && typeof _gpSDK.gameplayStop === 'function') _gpSDK.gameplayStop(); } catch(e) {}
     }
 
     // ── Patch startGame to fire SDK gameplay start ──
